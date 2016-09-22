@@ -41,8 +41,10 @@ class Model
                 if ($e->getCode() == 'HY000') {
                     // 如果mysql gone away，自动重连
                     \ORM::set_db(null, $this->_database);
+                    \ORM::get_db($this->_database);
+                    return call_user_func_array(array($this->_instance, $method), $args);
                 }
-                return call_user_func_array(array($this->_instance, $method), $args);
+                throw new Exception($e->getMessage(), $e->getCode());
             }
         } else {
             return false;
