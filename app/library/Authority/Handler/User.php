@@ -15,24 +15,13 @@ class UserHandler
     {
         $ret = new CommonRet;
 
-        $now = date('Y-m-d H:i:s');
-        $data = [
-            'username' => $user->username,
-            'nickname' => $user->nickname ? $user->nickname : '',
-            'password' => $user->password ? $user->password : '',
-            'email' => $user->email ? $user->email : '',
-            'telephone' => $user->telephone ? $user->telephone : '',
-            'ctime' => $now,
-            'mtime' => $now,
-        ];
-
-        $model = new \User();
-        try {
-            $model->create()->set($data)->save();
+        $id = (new \User())->add($user->username, $user->nickname ? : '', $user->email ? : '', $user->telephone ? : '');
+        if ($id) {
             $ret->ret = \Constant::RET_OK;
-            $ret->data = json_encode(['id' => $model->id()]);
-        } catch (\Exception $e) {
+            $ret->data = json_encode(['id' => $id]);
+        } else {
             $ret->ret = \Constant::RET_DATA_CONFLICT;
+            $ret->data = 'User exists!';
         }
 
         return $ret;
@@ -49,14 +38,11 @@ class UserHandler
     {
         $ret = new CommonRet;
 
-        $user = (new \User())->find_one($user_id);
-        if ($user) {
-            if ($user->delete()) {
-                (new \AuthAssignment)->where('user_id', $user_id)->delete_many();
-                $ret->ret = \Constant::RET_OK;
-            } else {
-                $ret->ret = \Constant::RET_SYS_ERROR;
-            }
+        $count = (new \User())->remove($user_id);
+        if ($count) {
+            // 删除用户所在的组关系
+            (new \AuthAssignment)->removeByUserId($user_id);
+            $ret->ret = \Constant::RET_OK;
         } else {
             $ret->ret = \Constant::RET_DATA_NO_FOUND;
         }
@@ -76,26 +62,14 @@ class UserHandler
     {
         $ret = new CommonRet;
 
-        $item = (new \User())->find_one($user_id);
+        $model = new \User();
+        $item = $model->getById($user_id);
         if ($item) {
-            $data = ['mtime' => date('Y-m-d H:i:s')];
-            if ($user->username) {
-                $data['username'] = $user->username;
-            }
-            if ($user->nickname) {
-                $data['nickname'] = $user->nickname;
-            }
-            if ($user->password) {
-                $data['password'] = $user->password;
-            }
-            if ($user->email) {
-                $data['email'] = $user->email;
-            }
-            if ($user->telephone) {
-                $data['telephone'] = $user->telephone;
-            }
+            $nickname = $user->nickname ? : $item['nickname'];
+            $email = $user->email ? : $item['email'];
+            $telephone = $user->telephone ? : $item['telephone'];
             try {
-                $item->set($data)->save();
+                $model->update($user_id, $nickname, $email, $telephone);
                 $ret->ret = \Constant::RET_OK;
             } catch (\Exception $e) {
                 $ret->ret = \Constant::RET_DATA_CONFLICT;
@@ -118,14 +92,13 @@ class UserHandler
     {
         $user = new User();
 
-        $item = (new \User())->where('username', $username)->find_one();
+        $item = (new \User())->getByName($username);
         if ($item) {
-            $user->id = $item->id;
-            $user->username = $item->username;
-            $user->nickname = $item->nickname;
-            $user->password = $item->password;
-            $user->email = $item->email;
-            $user->telephone = $item->telephone;
+            $user->id = $item['id'];
+            $user->username = $item['username'];
+            $user->nickname = $item['nickname'];
+            $user->email = $item['email'];
+            $user->telephone = $item['telephone'];
         }
 
         return $user;
@@ -143,43 +116,51 @@ class UserHandler
         $ret = new UserRet();
         $ret->ret = \Constant::RET_OK;
 
-        $model = new \User();
-        if ($conditions = $search->conditions) {
-            foreach ($conditions as $condition) {
-                $expr = $condition->expr ? : 'where';
-                $model->$expr($condition->field, $condition->value);
-            }
-        }
-        $ret->total = $model->count();
-
-        $model->clean();
-        if ($conditions = $search->conditions) {
-            foreach ($conditions as $condition) {
-                $expr = $condition->expr ? : 'where';
-                $model->$expr($condition->field, $condition->value);
-            }
-        }
-        if ($page = $search->page) {
-            $pagesize = $search->pagesize ? : 20;
-            $model->offset(($page - 1) * $pagesize)->limit($pagesize);
-        }
-
-        $result = $model->order_by_desc('id')->find_array();
         $users = [];
-        if ($result) {
-            foreach ($result as $item) {
-                $users[] = new User(
+        $model = new \User();
+
+        if (!$search->page && !$search->conditions) {
+            // 无搜索条件 ^_^
+            $users = $model->getAll();
+            $ret->total = count($users);
+        } else {
+            // 有搜索条件 @_@
+            $sql = 'SELECT * FROM user';
+            $total_sql = 'SELECT COUNT(1) FROM user';
+            if ($search->conditions) {
+                $where = [];
+                foreach ($search->conditions as $condition) {
+                    $expr = $condition->expr ? : '=';
+                    $where[] = "{$condition->field} {$expr} '{$condition->value}'";
+                }
+                $where = implode(' AND ', $where);
+                $sql .= " WHERE {$where}";
+                $total_sql .= " WHERE {$where}";
+            }
+            $ret->total = $model->query($total_sql)->fetch(\PDO::FETCH_COLUMN);
+            $sql .= ' ORDER BY id DESC';
+            if ($page = $search->page) {
+                $pagesize = $search->pagesize ? : 20;
+                $offset = ($page - 1) * $pagesize;
+                $sql .= " LIMIT {$offset},{$pagesize}";
+            }
+            $users = $model->query($sql)->fetchAll(\PDO::FETCH_ASSOC);
+        }
+
+        if ($users) {
+            $data = [];
+            foreach ($users as $user) {
+                $data[] = new User(
                     [
-                        'id' => $item['id'],
-                        'username' => $item['username'],
-                        'nickname' => $item['nickname'],
-                        'password' => $item['password'],
-                        'email' => $item['email'],
-                        'telephone' => $item['telephone'],
+                        'id' => $user['id'],
+                        'username' => $user['username'],
+                        'nickname' => $user['nickname'],
+                        'email' => $user['email'],
+                        'telephone' => $user['telephone'],
                     ]
                 );
             }
-            $ret->users = $users;
+            $ret->users = $data;
         }
 
         return $ret;
@@ -199,16 +180,15 @@ class UserHandler
         $ret->ret = \Constant::RET_OK;
 
         if (in_array('user', $rlat)) {
-            $item = (new \User())->find_one($user_id);
+            $item = (new \User())->getById($user_id);
             if ($item) {
                 $ret->user = new User(
                     [
-                        'id' => $item->id,
-                        'username' => $item->username,
-                        'nickname' => $item->nickname,
-                        'password' => $item->password,
-                        'email' => $item->email,
-                        'telephone' => $item->telephone,
+                        'id' => $item['id'],
+                        'username' => $item['username'],
+                        'nickname' => $item['nickname'],
+                        'email' => $item['email'],
+                        'telephone' => $item['telephone'],
                     ]
                 );
             }
@@ -216,37 +196,38 @@ class UserHandler
 
         if (in_array('auth', $rlat)) {
             $groups = $super_points = $points = [];
-            $items = (new \AuthItem())->getItems();
+            $items = (new \AuthItem())->getAll();
 
             // get user groups
-            $group_ids = (new \AuthAssignment())->getAssignmentByUserId($user_id);
+            $group_ids = (new \AuthAssignment())->getItemIdsByUserId($user_id);
             if ($group_ids) {
                 foreach ($group_ids as $group_id) {
                     $groups[] = new Group(
                         [
-                            'id' => $items[$group_id]->id,
-                            'type' => $items[$group_id]->type,
-                            'name' => $items[$group_id]->name,
-                            'description' => $items[$group_id]->description,
+                            'id' => $items[$group_id]['id'],
+                            'type' => $items[$group_id]['type'],
+                            'name' => $items[$group_id]['name'],
+                            'description' => $items[$group_id]['description'],
                         ]
                     );
                 }
 
                 if (in_array(\Constant::ADMIN, $group_ids)) {
                     foreach ($items as $item) {
-                        if ($item->type == \Constant::POINT) {
-                            $super_points[] = $item->data;
+                        if ($item['type'] == \Constant::POINT) {
+                            $super_points[] = $item['data'];
                         }
                     }
                 } else {
-                    foreach ((new \AuthItemChild())->getChildren($group_ids) as $key => $value) {
-                        foreach ($value as $v) {
-                            if ($items[$v]->type == \Constant::POINT) {
-                                if ($items[$key]->type == \Constant::ORG) {
-                                    $super_points[] = $items[$v]->data;
+                    $auth_item_child = new \AuthItemChild();
+                    foreach ($group_ids as $group_id) {
+                        foreach ($auth_item_child->getChildren($group_id) as $child) {
+                            if ($items[$child]['type'] == \Constant::POINT) {
+                                if ($items[$group_id]['type'] == \Constant::ORG) {
+                                    $super_points[] = $items[$child]['data'];
                                 }
-                                if ($items[$key]->type == \Constant::GROUP) {
-                                    $points[] = $items[$v]->data;
+                                if ($items[$group_id]['type'] == \Constant::GROUP) {
+                                    $points[] = $items[$child]['data'];
                                 }
                             }
                         }
@@ -276,45 +257,37 @@ class UserHandler
         $ret->ret = \Constant::RET_OK;
 
         $groups = [];
-        $items = (new \AuthItem())->getItems();
+        $items = (new \AuthItem())->getAll();
 
         // 若 user_id = 0 则作超级管理员处理
-        $group_ids = $user_id ? (new \AuthAssignment())->getAssignmentByUserId($user_id) : [\Constant::ADMIN];
+        $group_ids = $user_id ? (new \AuthAssignment())->getItemIdsByUserId($user_id) : [\Constant::ADMIN];
         if (in_array(\Constant::ADMIN, $group_ids)) {
             // 超级管理员 ADMIN
             foreach ($items as $item) {
-                if ($item->type == \Constant::ORG || $item->type == \Constant::GROUP) {
+                if ($item['type'] == \Constant::ORG || $item['type'] == \Constant::GROUP) {
                     $groups[] = new Group(
                         [
-                            'id' => $item->id,
-                            'type' => $item->type,
-                            'name' => $item->name,
-                            'description' => $item->description,
+                            'id' => $item['id'],
+                            'type' => $item['type'],
+                            'name' => $item['name'],
+                            'description' => $item['description'],
                         ]
                     );
                 }
             }
         } else {
             // 获取用户所在的权限组
-            $orgs = [];
+            $auth_item_child = new \AuthItemChild();
             foreach ($group_ids as $group_id) {
-                if ($items[$group_id]->type == \Constant::ORG) {
-                    $orgs[] = $group_id;
-                }
-            }
-
-            // 如果用户拥有权限组，构建返回对象
-            if ($orgs) {
-                $children = (new \AuthItemChild())->getChildren($orgs);
-                foreach ($children as $value) {
-                    foreach ($value as $v) {
-                        if ($items[$v]->type == \Constant::GROUP) {
+                if ($items[$group_id]['type'] == \Constant::ORG) {
+                    foreach ($auth_item_child->getChildren($group_id) as $child) {
+                        if ($items[$child]['type'] == \Constant::GROUP) {
                             $groups[] = new Group(
                                 [
-                                    'id' => $items[$v]->id,
-                                    'type' => $items[$v]->type,
-                                    'name' => $items[$v]->name,
-                                    'description' => $items[$v]->description,
+                                    'id' => $items[$child]['id'],
+                                    'type' => $items[$child]['type'],
+                                    'name' => $items[$child]['name'],
+                                    'description' => $items[$child]['description'],
                                 ]
                             );
                         }
@@ -341,27 +314,13 @@ class UserHandler
     public static function assignGroup(array $group_ids, $user_id)
     {
         $auth_assignment = new \AuthAssignment();
-        // 获取之前的用户组
-        $origin = $auth_assignment->getAssignmentByUserId($user_id);
 
         // 构建要删除及添加的用户组
-        if ($origin) {
-            $deleted = array_diff($origin, $group_ids);
-            if ($deleted && !$auth_assignment->clean()->where('user_id', $user_id)->where_in('item_id', $deleted)->delete_many()) {
-                return false;
-            }
-        }
-
-        $added = array_diff($group_ids, $origin);
-        if ($added == [0] || !$added) {
-            return true;
-        }
-        $now = date('Y-m-d H:i:s');
-        foreach ($added as &$item) {
-            $item = "({$item}, {$user_id}, '{$now}')";
-        }
-
-        return \ORM::raw_execute('INSERT INTO auth_assignment (item_id, user_id, ctime) VALUES '.implode(',', $added).';');
+        $origin = $auth_assignment->getItemIdsByUserId($user_id);
+        $deleted = $origin ? array_diff($origin, $group_ids) : [];
+        $added = ($group_ids == [0]) ? [] : array_diff($group_ids, $origin);
+        
+        return $auth_assignment->updateMulti($user_id, $added, $deleted);
     }
 
 }

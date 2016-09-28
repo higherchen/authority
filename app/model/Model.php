@@ -3,46 +3,52 @@
 class Model
 {
     protected $_database = 'default';
-    protected $_table = '';
 
-    // orm instance for model
-    protected $_instance;
+    // pdo instance for model
+    protected $_db;
 
-    public function __construct($table = '', $database = '')
+    // pdo prepare statements
+    protected $_prepared = [];
+
+    public function __construct($database = 'default')
     {
-        if ($table) {
-            $this->_table = $table;
-        }
-        if ($database) {
-            $this->_database = $database;
-        }
-        if (!$this->_table) {
-            $this->_table = strtolower(get_called_class());
-        }
-        $this->_instance = \ORM::for_table($this->_table, $this->_database);
+        $this->_database = $database;
+        $this->connect();
     }
 
-    public function __get($key)
+    protected function connect()
     {
-        return isset($this->_instance->$key) ? $this->_instance->$key : null;
+        $db = include ROOT.'/config/database.php';
+        $config = $db[$this->_database];
+        $this->_db = new PDO(
+            $config['connection_string'],
+            $config['username'],
+            $config['password'],
+            $config['driver_options']
+        );
     }
 
-    public function __set($key, $value)
+    public function getStatement($sql)
     {
-        $this->_instance->$key = $value;
+        $mark = md5($sql);
+        if (!isset($this->_prepared[$mark])) {
+            $this->_prepared[$mark] = $this->prepare($sql);
+        }
+        return $this->_prepared[$mark];
     }
 
-    public function __call($method, $args)
+    public function __call($method, $arguments)
     {
-        if ($this->_instance && method_exists($this->_instance, $method)) {
+        if ($this->_db && method_exists($this->_db, $method)) {
             try {
-                return call_user_func_array(array($this->_instance, $method), $args);
+                return call_user_func_array([$this->_db, $method], $arguments);
             } catch (Exception $e) {
                 if ($e->getCode() == 'HY000') {
                     // 如果mysql gone away，自动重连
-                    \ORM::set_db(null, $this->_database);
-                    \ORM::get_db($this->_database);
-                    return call_user_func_array(array($this->_instance, $method), $args);
+                    $this->_db = null;
+                    $this->_prepared = [];
+                    $this->connect();
+                    return call_user_func_array([$this->_db, $method], $arguments);
                 }
                 throw new Exception($e->getMessage(), $e->getCode());
             }
@@ -51,10 +57,4 @@ class Model
         }
     }
 
-    public function clean()
-    {
-        $this->_instance = \ORM::for_table($this->_table, $this->_database);
-
-        return $this;
-    }
 }

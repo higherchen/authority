@@ -104,9 +104,10 @@ interface AuthorityServiceIf {
    */
   public function updateCategory($cate_id, \Authority\Category $category);
   /**
+   * @param \Authority\Search $search
    * @return \Authority\CategoryRet
    */
-  public function getCategories();
+  public function getCategories(\Authority\Search $search);
   /**
    * @param \Authority\Group $group
    * @param int $parent
@@ -124,11 +125,6 @@ interface AuthorityServiceIf {
    * @return \Authority\CommonRet
    */
   public function updateGroup($group_id, \Authority\Group $group);
-  /**
-   * @param \Authority\Search $search
-   * @return \Authority\GroupRet
-   */
-  public function getGroups(\Authority\Search $search);
   /**
    * @param int $group_id
    * @param string[] $rlat
@@ -164,16 +160,18 @@ interface AuthorityServiceIf {
    */
   public function addResourceAttr(\Authority\ResourceAttr $resource_attr);
   /**
-   * @param int $resource_attr_id
+   * @param string $name
+   * @param int $src_id
    * @return \Authority\CommonRet
    */
-  public function rmResourceAttr($resource_attr_id);
+  public function rmResourceAttr($name, $src_id);
   /**
-   * @param int $resource_attr_id
+   * @param string $name
+   * @param int $src_id
    * @param \Authority\ResourceAttr $resource_attr
    * @return \Authority\CommonRet
    */
-  public function updateResourceAttr($resource_attr_id, \Authority\ResourceAttr $resource_attr);
+  public function updateResourceAttr($name, $src_id, \Authority\ResourceAttr $resource_attr);
   /**
    * @param \Authority\Search $search
    * @return \Authority\ResourceAttrRet
@@ -1047,15 +1045,16 @@ class AuthorityServiceClient implements \Authority\AuthorityServiceIf {
     throw new \Exception("updateCategory failed: unknown result");
   }
 
-  public function getCategories()
+  public function getCategories(\Authority\Search $search)
   {
-    $this->send_getCategories();
+    $this->send_getCategories($search);
     return $this->recv_getCategories();
   }
 
-  public function send_getCategories()
+  public function send_getCategories(\Authority\Search $search)
   {
     $args = new \Authority\AuthorityService_getCategories_args();
+    $args->search = $search;
     $bin_accel = ($this->output_ instanceof TBinaryProtocolAccelerated) && function_exists('thrift_protocol_write_binary');
     if ($bin_accel)
     {
@@ -1250,57 +1249,6 @@ class AuthorityServiceClient implements \Authority\AuthorityServiceIf {
       return $result->success;
     }
     throw new \Exception("updateGroup failed: unknown result");
-  }
-
-  public function getGroups(\Authority\Search $search)
-  {
-    $this->send_getGroups($search);
-    return $this->recv_getGroups();
-  }
-
-  public function send_getGroups(\Authority\Search $search)
-  {
-    $args = new \Authority\AuthorityService_getGroups_args();
-    $args->search = $search;
-    $bin_accel = ($this->output_ instanceof TBinaryProtocolAccelerated) && function_exists('thrift_protocol_write_binary');
-    if ($bin_accel)
-    {
-      thrift_protocol_write_binary($this->output_, 'getGroups', TMessageType::CALL, $args, $this->seqid_, $this->output_->isStrictWrite());
-    }
-    else
-    {
-      $this->output_->writeMessageBegin('getGroups', TMessageType::CALL, $this->seqid_);
-      $args->write($this->output_);
-      $this->output_->writeMessageEnd();
-      $this->output_->getTransport()->flush();
-    }
-  }
-
-  public function recv_getGroups()
-  {
-    $bin_accel = ($this->input_ instanceof TBinaryProtocolAccelerated) && function_exists('thrift_protocol_read_binary');
-    if ($bin_accel) $result = thrift_protocol_read_binary($this->input_, '\Authority\AuthorityService_getGroups_result', $this->input_->isStrictRead());
-    else
-    {
-      $rseqid = 0;
-      $fname = null;
-      $mtype = 0;
-
-      $this->input_->readMessageBegin($fname, $mtype, $rseqid);
-      if ($mtype == TMessageType::EXCEPTION) {
-        $x = new TApplicationException();
-        $x->read($this->input_);
-        $this->input_->readMessageEnd();
-        throw $x;
-      }
-      $result = new \Authority\AuthorityService_getGroups_result();
-      $result->read($this->input_);
-      $this->input_->readMessageEnd();
-    }
-    if ($result->success !== null) {
-      return $result->success;
-    }
-    throw new \Exception("getGroups failed: unknown result");
   }
 
   public function getGroupById($group_id, array $rlat)
@@ -1613,16 +1561,17 @@ class AuthorityServiceClient implements \Authority\AuthorityServiceIf {
     throw new \Exception("addResourceAttr failed: unknown result");
   }
 
-  public function rmResourceAttr($resource_attr_id)
+  public function rmResourceAttr($name, $src_id)
   {
-    $this->send_rmResourceAttr($resource_attr_id);
+    $this->send_rmResourceAttr($name, $src_id);
     return $this->recv_rmResourceAttr();
   }
 
-  public function send_rmResourceAttr($resource_attr_id)
+  public function send_rmResourceAttr($name, $src_id)
   {
     $args = new \Authority\AuthorityService_rmResourceAttr_args();
-    $args->resource_attr_id = $resource_attr_id;
+    $args->name = $name;
+    $args->src_id = $src_id;
     $bin_accel = ($this->output_ instanceof TBinaryProtocolAccelerated) && function_exists('thrift_protocol_write_binary');
     if ($bin_accel)
     {
@@ -1664,16 +1613,17 @@ class AuthorityServiceClient implements \Authority\AuthorityServiceIf {
     throw new \Exception("rmResourceAttr failed: unknown result");
   }
 
-  public function updateResourceAttr($resource_attr_id, \Authority\ResourceAttr $resource_attr)
+  public function updateResourceAttr($name, $src_id, \Authority\ResourceAttr $resource_attr)
   {
-    $this->send_updateResourceAttr($resource_attr_id, $resource_attr);
+    $this->send_updateResourceAttr($name, $src_id, $resource_attr);
     return $this->recv_updateResourceAttr();
   }
 
-  public function send_updateResourceAttr($resource_attr_id, \Authority\ResourceAttr $resource_attr)
+  public function send_updateResourceAttr($name, $src_id, \Authority\ResourceAttr $resource_attr)
   {
     $args = new \Authority\AuthorityService_updateResourceAttr_args();
-    $args->resource_attr_id = $resource_attr_id;
+    $args->name = $name;
+    $args->src_id = $src_id;
     $args->resource_attr = $resource_attr;
     $bin_accel = ($this->output_ instanceof TBinaryProtocolAccelerated) && function_exists('thrift_protocol_write_binary');
     if ($bin_accel)
@@ -3276,14 +3226,14 @@ class AuthorityService_getUserById_args {
         case 2:
           if ($ftype == TType::LST) {
             $this->rlat = array();
-            $_size98 = 0;
-            $_etype101 = 0;
-            $xfer += $input->readListBegin($_etype101, $_size98);
-            for ($_i102 = 0; $_i102 < $_size98; ++$_i102)
+            $_size91 = 0;
+            $_etype94 = 0;
+            $xfer += $input->readListBegin($_etype94, $_size91);
+            for ($_i95 = 0; $_i95 < $_size91; ++$_i95)
             {
-              $elem103 = null;
-              $xfer += $input->readString($elem103);
-              $this->rlat []= $elem103;
+              $elem96 = null;
+              $xfer += $input->readString($elem96);
+              $this->rlat []= $elem96;
             }
             $xfer += $input->readListEnd();
           } else {
@@ -3316,9 +3266,9 @@ class AuthorityService_getUserById_args {
       {
         $output->writeListBegin(TType::STRING, count($this->rlat));
         {
-          foreach ($this->rlat as $iter104)
+          foreach ($this->rlat as $iter97)
           {
-            $xfer += $output->writeString($iter104);
+            $xfer += $output->writeString($iter97);
           }
         }
         $output->writeListEnd();
@@ -3628,14 +3578,14 @@ class AuthorityService_assignGroup2User_args {
         case 1:
           if ($ftype == TType::LST) {
             $this->group_ids = array();
-            $_size105 = 0;
-            $_etype108 = 0;
-            $xfer += $input->readListBegin($_etype108, $_size105);
-            for ($_i109 = 0; $_i109 < $_size105; ++$_i109)
+            $_size98 = 0;
+            $_etype101 = 0;
+            $xfer += $input->readListBegin($_etype101, $_size98);
+            for ($_i102 = 0; $_i102 < $_size98; ++$_i102)
             {
-              $elem110 = null;
-              $xfer += $input->readI32($elem110);
-              $this->group_ids []= $elem110;
+              $elem103 = null;
+              $xfer += $input->readI32($elem103);
+              $this->group_ids []= $elem103;
             }
             $xfer += $input->readListEnd();
           } else {
@@ -3670,9 +3620,9 @@ class AuthorityService_assignGroup2User_args {
       {
         $output->writeListBegin(TType::I32, count($this->group_ids));
         {
-          foreach ($this->group_ids as $iter111)
+          foreach ($this->group_ids as $iter104)
           {
-            $xfer += $output->writeI32($iter111);
+            $xfer += $output->writeI32($iter104);
           }
         }
         $output->writeListEnd();
@@ -4788,11 +4738,25 @@ class AuthorityService_updateCategory_result {
 class AuthorityService_getCategories_args {
   static $_TSPEC;
 
+  /**
+   * @var \Authority\Search
+   */
+  public $search = null;
 
-  public function __construct() {
+  public function __construct($vals=null) {
     if (!isset(self::$_TSPEC)) {
       self::$_TSPEC = array(
+        1 => array(
+          'var' => 'search',
+          'type' => TType::STRUCT,
+          'class' => '\Authority\Search',
+          ),
         );
+    }
+    if (is_array($vals)) {
+      if (isset($vals['search'])) {
+        $this->search = $vals['search'];
+      }
     }
   }
 
@@ -4815,6 +4779,14 @@ class AuthorityService_getCategories_args {
       }
       switch ($fid)
       {
+        case 1:
+          if ($ftype == TType::STRUCT) {
+            $this->search = new \Authority\Search();
+            $xfer += $this->search->read($input);
+          } else {
+            $xfer += $input->skip($ftype);
+          }
+          break;
         default:
           $xfer += $input->skip($ftype);
           break;
@@ -4828,6 +4800,14 @@ class AuthorityService_getCategories_args {
   public function write($output) {
     $xfer = 0;
     $xfer += $output->writeStructBegin('AuthorityService_getCategories_args');
+    if ($this->search !== null) {
+      if (!is_object($this->search)) {
+        throw new TProtocolException('Bad type in structure.', TProtocolException::INVALID_DATA);
+      }
+      $xfer += $output->writeFieldBegin('search', TType::STRUCT, 1);
+      $xfer += $this->search->write($output);
+      $xfer += $output->writeFieldEnd();
+    }
     $xfer += $output->writeFieldStop();
     $xfer += $output->writeStructEnd();
     return $xfer;
@@ -5436,166 +5416,6 @@ class AuthorityService_updateGroup_result {
 
 }
 
-class AuthorityService_getGroups_args {
-  static $_TSPEC;
-
-  /**
-   * @var \Authority\Search
-   */
-  public $search = null;
-
-  public function __construct($vals=null) {
-    if (!isset(self::$_TSPEC)) {
-      self::$_TSPEC = array(
-        1 => array(
-          'var' => 'search',
-          'type' => TType::STRUCT,
-          'class' => '\Authority\Search',
-          ),
-        );
-    }
-    if (is_array($vals)) {
-      if (isset($vals['search'])) {
-        $this->search = $vals['search'];
-      }
-    }
-  }
-
-  public function getName() {
-    return 'AuthorityService_getGroups_args';
-  }
-
-  public function read($input)
-  {
-    $xfer = 0;
-    $fname = null;
-    $ftype = 0;
-    $fid = 0;
-    $xfer += $input->readStructBegin($fname);
-    while (true)
-    {
-      $xfer += $input->readFieldBegin($fname, $ftype, $fid);
-      if ($ftype == TType::STOP) {
-        break;
-      }
-      switch ($fid)
-      {
-        case 1:
-          if ($ftype == TType::STRUCT) {
-            $this->search = new \Authority\Search();
-            $xfer += $this->search->read($input);
-          } else {
-            $xfer += $input->skip($ftype);
-          }
-          break;
-        default:
-          $xfer += $input->skip($ftype);
-          break;
-      }
-      $xfer += $input->readFieldEnd();
-    }
-    $xfer += $input->readStructEnd();
-    return $xfer;
-  }
-
-  public function write($output) {
-    $xfer = 0;
-    $xfer += $output->writeStructBegin('AuthorityService_getGroups_args');
-    if ($this->search !== null) {
-      if (!is_object($this->search)) {
-        throw new TProtocolException('Bad type in structure.', TProtocolException::INVALID_DATA);
-      }
-      $xfer += $output->writeFieldBegin('search', TType::STRUCT, 1);
-      $xfer += $this->search->write($output);
-      $xfer += $output->writeFieldEnd();
-    }
-    $xfer += $output->writeFieldStop();
-    $xfer += $output->writeStructEnd();
-    return $xfer;
-  }
-
-}
-
-class AuthorityService_getGroups_result {
-  static $_TSPEC;
-
-  /**
-   * @var \Authority\GroupRet
-   */
-  public $success = null;
-
-  public function __construct($vals=null) {
-    if (!isset(self::$_TSPEC)) {
-      self::$_TSPEC = array(
-        0 => array(
-          'var' => 'success',
-          'type' => TType::STRUCT,
-          'class' => '\Authority\GroupRet',
-          ),
-        );
-    }
-    if (is_array($vals)) {
-      if (isset($vals['success'])) {
-        $this->success = $vals['success'];
-      }
-    }
-  }
-
-  public function getName() {
-    return 'AuthorityService_getGroups_result';
-  }
-
-  public function read($input)
-  {
-    $xfer = 0;
-    $fname = null;
-    $ftype = 0;
-    $fid = 0;
-    $xfer += $input->readStructBegin($fname);
-    while (true)
-    {
-      $xfer += $input->readFieldBegin($fname, $ftype, $fid);
-      if ($ftype == TType::STOP) {
-        break;
-      }
-      switch ($fid)
-      {
-        case 0:
-          if ($ftype == TType::STRUCT) {
-            $this->success = new \Authority\GroupRet();
-            $xfer += $this->success->read($input);
-          } else {
-            $xfer += $input->skip($ftype);
-          }
-          break;
-        default:
-          $xfer += $input->skip($ftype);
-          break;
-      }
-      $xfer += $input->readFieldEnd();
-    }
-    $xfer += $input->readStructEnd();
-    return $xfer;
-  }
-
-  public function write($output) {
-    $xfer = 0;
-    $xfer += $output->writeStructBegin('AuthorityService_getGroups_result');
-    if ($this->success !== null) {
-      if (!is_object($this->success)) {
-        throw new TProtocolException('Bad type in structure.', TProtocolException::INVALID_DATA);
-      }
-      $xfer += $output->writeFieldBegin('success', TType::STRUCT, 0);
-      $xfer += $this->success->write($output);
-      $xfer += $output->writeFieldEnd();
-    }
-    $xfer += $output->writeFieldStop();
-    $xfer += $output->writeStructEnd();
-    return $xfer;
-  }
-
-}
-
 class AuthorityService_getGroupById_args {
   static $_TSPEC;
 
@@ -5664,14 +5484,14 @@ class AuthorityService_getGroupById_args {
         case 2:
           if ($ftype == TType::LST) {
             $this->rlat = array();
-            $_size112 = 0;
-            $_etype115 = 0;
-            $xfer += $input->readListBegin($_etype115, $_size112);
-            for ($_i116 = 0; $_i116 < $_size112; ++$_i116)
+            $_size105 = 0;
+            $_etype108 = 0;
+            $xfer += $input->readListBegin($_etype108, $_size105);
+            for ($_i109 = 0; $_i109 < $_size105; ++$_i109)
             {
-              $elem117 = null;
-              $xfer += $input->readString($elem117);
-              $this->rlat []= $elem117;
+              $elem110 = null;
+              $xfer += $input->readString($elem110);
+              $this->rlat []= $elem110;
             }
             $xfer += $input->readListEnd();
           } else {
@@ -5704,9 +5524,9 @@ class AuthorityService_getGroupById_args {
       {
         $output->writeListBegin(TType::STRING, count($this->rlat));
         {
-          foreach ($this->rlat as $iter118)
+          foreach ($this->rlat as $iter111)
           {
-            $xfer += $output->writeString($iter118);
+            $xfer += $output->writeString($iter111);
           }
         }
         $output->writeListEnd();
@@ -6016,14 +5836,14 @@ class AuthorityService_assignPoint2Group_args {
         case 1:
           if ($ftype == TType::LST) {
             $this->points = array();
-            $_size119 = 0;
-            $_etype122 = 0;
-            $xfer += $input->readListBegin($_etype122, $_size119);
-            for ($_i123 = 0; $_i123 < $_size119; ++$_i123)
+            $_size112 = 0;
+            $_etype115 = 0;
+            $xfer += $input->readListBegin($_etype115, $_size112);
+            for ($_i116 = 0; $_i116 < $_size112; ++$_i116)
             {
-              $elem124 = null;
-              $xfer += $input->readI32($elem124);
-              $this->points []= $elem124;
+              $elem117 = null;
+              $xfer += $input->readI32($elem117);
+              $this->points []= $elem117;
             }
             $xfer += $input->readListEnd();
           } else {
@@ -6058,9 +5878,9 @@ class AuthorityService_assignPoint2Group_args {
       {
         $output->writeListBegin(TType::I32, count($this->points));
         {
-          foreach ($this->points as $iter125)
+          foreach ($this->points as $iter118)
           {
-            $xfer += $output->writeI32($iter125);
+            $xfer += $output->writeI32($iter118);
           }
         }
         $output->writeListEnd();
@@ -6679,22 +6499,33 @@ class AuthorityService_rmResourceAttr_args {
   static $_TSPEC;
 
   /**
+   * @var string
+   */
+  public $name = null;
+  /**
    * @var int
    */
-  public $resource_attr_id = null;
+  public $src_id = null;
 
   public function __construct($vals=null) {
     if (!isset(self::$_TSPEC)) {
       self::$_TSPEC = array(
         1 => array(
-          'var' => 'resource_attr_id',
+          'var' => 'name',
+          'type' => TType::STRING,
+          ),
+        2 => array(
+          'var' => 'src_id',
           'type' => TType::I32,
           ),
         );
     }
     if (is_array($vals)) {
-      if (isset($vals['resource_attr_id'])) {
-        $this->resource_attr_id = $vals['resource_attr_id'];
+      if (isset($vals['name'])) {
+        $this->name = $vals['name'];
+      }
+      if (isset($vals['src_id'])) {
+        $this->src_id = $vals['src_id'];
       }
     }
   }
@@ -6719,8 +6550,15 @@ class AuthorityService_rmResourceAttr_args {
       switch ($fid)
       {
         case 1:
+          if ($ftype == TType::STRING) {
+            $xfer += $input->readString($this->name);
+          } else {
+            $xfer += $input->skip($ftype);
+          }
+          break;
+        case 2:
           if ($ftype == TType::I32) {
-            $xfer += $input->readI32($this->resource_attr_id);
+            $xfer += $input->readI32($this->src_id);
           } else {
             $xfer += $input->skip($ftype);
           }
@@ -6738,9 +6576,14 @@ class AuthorityService_rmResourceAttr_args {
   public function write($output) {
     $xfer = 0;
     $xfer += $output->writeStructBegin('AuthorityService_rmResourceAttr_args');
-    if ($this->resource_attr_id !== null) {
-      $xfer += $output->writeFieldBegin('resource_attr_id', TType::I32, 1);
-      $xfer += $output->writeI32($this->resource_attr_id);
+    if ($this->name !== null) {
+      $xfer += $output->writeFieldBegin('name', TType::STRING, 1);
+      $xfer += $output->writeString($this->name);
+      $xfer += $output->writeFieldEnd();
+    }
+    if ($this->src_id !== null) {
+      $xfer += $output->writeFieldBegin('src_id', TType::I32, 2);
+      $xfer += $output->writeI32($this->src_id);
       $xfer += $output->writeFieldEnd();
     }
     $xfer += $output->writeFieldStop();
@@ -6834,9 +6677,13 @@ class AuthorityService_updateResourceAttr_args {
   static $_TSPEC;
 
   /**
+   * @var string
+   */
+  public $name = null;
+  /**
    * @var int
    */
-  public $resource_attr_id = null;
+  public $src_id = null;
   /**
    * @var \Authority\ResourceAttr
    */
@@ -6846,10 +6693,14 @@ class AuthorityService_updateResourceAttr_args {
     if (!isset(self::$_TSPEC)) {
       self::$_TSPEC = array(
         1 => array(
-          'var' => 'resource_attr_id',
-          'type' => TType::I32,
+          'var' => 'name',
+          'type' => TType::STRING,
           ),
         2 => array(
+          'var' => 'src_id',
+          'type' => TType::I32,
+          ),
+        3 => array(
           'var' => 'resource_attr',
           'type' => TType::STRUCT,
           'class' => '\Authority\ResourceAttr',
@@ -6857,8 +6708,11 @@ class AuthorityService_updateResourceAttr_args {
         );
     }
     if (is_array($vals)) {
-      if (isset($vals['resource_attr_id'])) {
-        $this->resource_attr_id = $vals['resource_attr_id'];
+      if (isset($vals['name'])) {
+        $this->name = $vals['name'];
+      }
+      if (isset($vals['src_id'])) {
+        $this->src_id = $vals['src_id'];
       }
       if (isset($vals['resource_attr'])) {
         $this->resource_attr = $vals['resource_attr'];
@@ -6886,13 +6740,20 @@ class AuthorityService_updateResourceAttr_args {
       switch ($fid)
       {
         case 1:
-          if ($ftype == TType::I32) {
-            $xfer += $input->readI32($this->resource_attr_id);
+          if ($ftype == TType::STRING) {
+            $xfer += $input->readString($this->name);
           } else {
             $xfer += $input->skip($ftype);
           }
           break;
         case 2:
+          if ($ftype == TType::I32) {
+            $xfer += $input->readI32($this->src_id);
+          } else {
+            $xfer += $input->skip($ftype);
+          }
+          break;
+        case 3:
           if ($ftype == TType::STRUCT) {
             $this->resource_attr = new \Authority\ResourceAttr();
             $xfer += $this->resource_attr->read($input);
@@ -6913,16 +6774,21 @@ class AuthorityService_updateResourceAttr_args {
   public function write($output) {
     $xfer = 0;
     $xfer += $output->writeStructBegin('AuthorityService_updateResourceAttr_args');
-    if ($this->resource_attr_id !== null) {
-      $xfer += $output->writeFieldBegin('resource_attr_id', TType::I32, 1);
-      $xfer += $output->writeI32($this->resource_attr_id);
+    if ($this->name !== null) {
+      $xfer += $output->writeFieldBegin('name', TType::STRING, 1);
+      $xfer += $output->writeString($this->name);
+      $xfer += $output->writeFieldEnd();
+    }
+    if ($this->src_id !== null) {
+      $xfer += $output->writeFieldBegin('src_id', TType::I32, 2);
+      $xfer += $output->writeI32($this->src_id);
       $xfer += $output->writeFieldEnd();
     }
     if ($this->resource_attr !== null) {
       if (!is_object($this->resource_attr)) {
         throw new TProtocolException('Bad type in structure.', TProtocolException::INVALID_DATA);
       }
-      $xfer += $output->writeFieldBegin('resource_attr', TType::STRUCT, 2);
+      $xfer += $output->writeFieldBegin('resource_attr', TType::STRUCT, 3);
       $xfer += $this->resource_attr->write($output);
       $xfer += $output->writeFieldEnd();
     }
@@ -8523,7 +8389,7 @@ class AuthorityServiceProcessor {
     $args->read($input);
     $input->readMessageEnd();
     $result = new \Authority\AuthorityService_getCategories_result();
-    $result->success = $this->handler_->getCategories();
+    $result->success = $this->handler_->getCategories($args->search);
     $bin_accel = ($output instanceof TBinaryProtocolAccelerated) && function_exists('thrift_protocol_write_binary');
     if ($bin_accel)
     {
@@ -8589,25 +8455,6 @@ class AuthorityServiceProcessor {
     else
     {
       $output->writeMessageBegin('updateGroup', TMessageType::REPLY, $seqid);
-      $result->write($output);
-      $output->writeMessageEnd();
-      $output->getTransport()->flush();
-    }
-  }
-  protected function process_getGroups($seqid, $input, $output) {
-    $args = new \Authority\AuthorityService_getGroups_args();
-    $args->read($input);
-    $input->readMessageEnd();
-    $result = new \Authority\AuthorityService_getGroups_result();
-    $result->success = $this->handler_->getGroups($args->search);
-    $bin_accel = ($output instanceof TBinaryProtocolAccelerated) && function_exists('thrift_protocol_write_binary');
-    if ($bin_accel)
-    {
-      thrift_protocol_write_binary($output, 'getGroups', TMessageType::REPLY, $result, $seqid, $output->isStrictWrite());
-    }
-    else
-    {
-      $output->writeMessageBegin('getGroups', TMessageType::REPLY, $seqid);
       $result->write($output);
       $output->writeMessageEnd();
       $output->getTransport()->flush();
@@ -8732,7 +8579,7 @@ class AuthorityServiceProcessor {
     $args->read($input);
     $input->readMessageEnd();
     $result = new \Authority\AuthorityService_rmResourceAttr_result();
-    $result->success = $this->handler_->rmResourceAttr($args->resource_attr_id);
+    $result->success = $this->handler_->rmResourceAttr($args->name, $args->src_id);
     $bin_accel = ($output instanceof TBinaryProtocolAccelerated) && function_exists('thrift_protocol_write_binary');
     if ($bin_accel)
     {
@@ -8751,7 +8598,7 @@ class AuthorityServiceProcessor {
     $args->read($input);
     $input->readMessageEnd();
     $result = new \Authority\AuthorityService_updateResourceAttr_result();
-    $result->success = $this->handler_->updateResourceAttr($args->resource_attr_id, $args->resource_attr);
+    $result->success = $this->handler_->updateResourceAttr($args->name, $args->src_id, $args->resource_attr);
     $bin_accel = ($output instanceof TBinaryProtocolAccelerated) && function_exists('thrift_protocol_write_binary');
     if ($bin_accel)
     {

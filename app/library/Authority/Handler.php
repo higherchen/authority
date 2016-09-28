@@ -4,14 +4,6 @@ namespace Authority;
 
 class Handler implements AuthorityServiceIf
 {
-    public function __construct()
-    {
-        $db = include ROOT.'/config/database.php';
-        foreach ($db as $name => $option) {
-            \ORM::configure($option, null, $name);
-        }
-    }
-
     /******************************************************************/
     /**************************** Rule ********************************/
     /******************************************************************/
@@ -229,11 +221,13 @@ class Handler implements AuthorityServiceIf
     /**
      * 获取所有权限分类.
      *
+     * @param \Authority\Search $search
+     *
      * @return \Authority\CategoryRet $ret
      */
-    public function getCategories()
+    public function getCategories(Search $search)
     {
-        return CategoryHandler::getList();
+        return CategoryHandler::getList($search);
     }
 
     /******************************************************************/
@@ -377,26 +371,28 @@ class Handler implements AuthorityServiceIf
     /**
      * 删除资源权限属性.
      *
-     * @param int $resource_attr_id
+     * @param string $name
+     * @param int    $src_id
      *
      * @return \Authority\CommonRet $ret
      */
-    public function rmResourceAttr($resource_attr_id)
+    public function rmResourceAttr($name, $src_id)
     {
-        return ResourceAttrHandler::remove($resource_attr_id);
+        return ResourceAttrHandler::remove($name, $src_id);
     }
 
     /**
      * 更新资源权限属性.
      *
-     * @param int                     $resource_attr_id
+     * @param string                  $name
+     * @param int                     $src_id
      * @param \Authority\ResourceAttr $resource_attr
      *
      * @return \Authority\CommonRet $ret
      */
-    public function updateResourceAttr($resource_attr_id, ResourceAttr $resource_attr)
+    public function updateResourceAttr($name, $src_id, ResourceAttr $resource_attr)
     {
-        return ResourceAttrHandler::update($resource_attr_id, $resource_attr);
+        return ResourceAttrHandler::update($name, $src_id, $resource_attr);
     }
 
     /**

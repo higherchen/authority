@@ -16,18 +16,12 @@ class RoleHandler
         $ret = new CommonRet();
 
         try {
-            $now = date('Y-m-d H:i:s');
-            $data = [
-                'type' => $role->type,
-                'name' => $role->name,
-                'rule' => $role->rule ? : '',
-                'ctime' => $now,
-                'mtime' => $now,
-            ];
-            (new \Role())->create()->set($data)->save();
+            $id = (new \Role())->add($role->type, $role->name, $role->rule ? : '');
             $ret->ret = \Constant::RET_OK;
+            $ret->data = json_encode(['id' => $id]);
         } catch (\Exception $e) {
             $ret->ret = \Constant::RET_DATA_CONFLICT;
+            $ret->data = 'Role exists!';
         }
 
         return $ret;
@@ -44,12 +38,8 @@ class RoleHandler
     {
         $ret = new CommonRet();
 
-        $item = (new \Role())->find_one($role_id);
-        if ($item) {
-            $ret->ret = $item->delete() ? \Constant::RET_OK : \Constant::RET_SYS_ERROR;
-        } else {
-            $ret->ret = \Constant::RET_DATA_NO_FOUND;
-        }
+        $count = (new \Role())->remove($role_id);
+        $ret->ret = $count ? \Constant::RET_OK : \Constant::RET_DATA_NO_FOUND;
 
         return $ret;
     }
@@ -66,15 +56,13 @@ class RoleHandler
     {
         $ret = new CommonRet();
 
-        $item = (new \Role())->find_one($role_id);
+        $model = new \Role();
+        $item = $model->getById($role_id);
         if ($item) {
-            $data = [
-                'type' => $role->type,
-                'name' => $role->name,
-                'rule' => $role->rule ? : '',
-                'mtime' => date('Y-m-d H:i:s'),
-            ];
-            $ret->ret = $item->set($data)->save() ? \Constant::RET_OK : \Constant::RET_SYS_ERROR;
+            $name = $role->name ? : $item['name'];
+            $rule = $role->rule ? : $item['rule'];
+            $model->update($role_id, $name, $rule);
+            $ret->ret = \Constant::RET_OK;
         } else {
             $ret->ret = \Constant::RET_DATA_NO_FOUND;
         }
@@ -95,41 +83,50 @@ class RoleHandler
         $ret = new RoleRet();
         $ret->ret = \Constant::RET_OK;
 
-        $model = new \Role();
-        if ($conditions = $search->conditions) {
-            foreach ($conditions as $condition) {
-                $expr = $condition->expr ? : 'where';
-                $model->$expr($condition->field, $condition->value);
-            }
-        }
-        $ret->total = $model->count();
-
-        $model->clean();
-        if ($conditions = $search->conditions) {
-            foreach ($conditions as $condition) {
-                $expr = $condition->expr ? : 'where';
-                $model->$expr($condition->field, $condition->value);
-            }
-        }
-        if ($page = $search->page) {
-            $pagesize = $search->pagesize ? : 20;
-            $model->offset(($page - 1) * $pagesize)->limit($pagesize);
-        }
-
-        $result = $model->order_by_desc('id')->find_array();
         $roles = [];
-        if ($result) {
-            foreach ($result as $item) {
-                $roles[] = new Role(
+        $model = new \Role();
+
+        if (!$search->page && !$search->conditions) {
+            // 无搜索条件 ^_^
+            $roles = $model->getAll();
+            $ret->total = count($roles);
+        } else {
+            // 有搜索条件 @_@
+            $sql = 'SELECT * FROM role';
+            $total_sql = 'SELECT COUNT(1) FROM role';
+            if ($search->conditions) {
+                $where = [];
+                foreach ($search->conditions as $condition) {
+                    $expr = $condition->expr ? : '=';
+                    $where[] = "{$condition->field} {$expr} '{$condition->value}'";
+                }
+                $where = implode(' AND ', $where);
+                $sql .= " WHERE {$where}";
+                $total_sql .= " WHERE {$where}";
+            }
+            $ret->total = $model->query($total_sql)->fetch(\PDO::FETCH_COLUMN);
+            $sql .= ' ORDER BY id DESC';
+            if ($page = $search->page) {
+                $pagesize = $search->pagesize ? : 20;
+                $offset = ($page - 1) * $pagesize;
+                $sql .= " LIMIT {$offset},{$pagesize}";
+            }
+            $roles = $model->query($sql)->fetchAll(\PDO::FETCH_ASSOC);
+        }
+
+        if ($roles) {
+            $data = [];
+            foreach ($roles as $role) {
+                $data[] = new Role(
                     [
-                        'id' => $item['id'],
-                        'type' => $item['type'],
-                        'name' => $item['name'],
-                        'rule' => $item['rule'],
+                        'id' => $role['id'],
+                        'type' => $role['type'],
+                        'name' => $role['name'],
+                        'rule' => $role['rule'],
                     ]
                 );
             }
-            $ret->roles = $roles;
+            $ret->roles = $data;
         }
 
         return $ret;

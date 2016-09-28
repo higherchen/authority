@@ -15,22 +15,9 @@ class RuleHandler
     {
         $ret = new CommonRet();
 
-        try {
-            $now = date('Y-m-d H:i:s');
-            $model = new \AuthRule();
-            $model->create()->set(
-                [
-                    'name' => $rule->name,
-                    'data' => $rule->data ? : null,
-                    'ctime' => $now,
-                    'mtime' => $now,
-                ]
-            )->save();
-            $ret->ret = \Constant::RET_OK;
-            $ret->data = json_encode(['id' => $model->id()]);
-        } catch (\Exception $e) {
-            $ret->ret = \Constant::RET_DATA_CONFLICT;
-        }
+        $id = (new \AuthRule())->add($rule->name, $rule->data ? : null);
+        $ret->ret = \Constant::RET_OK;
+        $ret->data = json_encode(['id' => $id]);
 
         return $ret;
     }
@@ -46,13 +33,8 @@ class RuleHandler
     {
         $ret = new CommonRet();
 
-        $rule = (new \AuthRule())->find_one($rule_id);
-
-        if ($rule) {
-            $ret->ret = $rule->delete() ? \Constant::RET_OK : \Constant::RET_SYS_ERROR;
-        } else {
-            $ret->ret = \Constant::RET_DATA_NO_FOUND;
-        }
+        $count = (new \AuthRule())->remove($rule_id);
+        $ret->ret = $count ? \Constant::RET_OK : \Constant::RET_DATA_NO_FOUND;
 
         return $ret;
     }

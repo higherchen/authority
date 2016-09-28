@@ -15,22 +15,19 @@ class ResourceAttrHandler
     {
         $ret = new CommonRet();
 
-        try {
-            $now = date('Y-m-d H:i:s');
-            $data = [
-                'name' => $resource_attr->name,
-                'src_id' => $resource_attr->src_id,
-                'owner_id' => $resource_attr->owner_id ? : 0,
-                'role_id' => $resource_attr->role_id ? : 0,
-                'mode' => $resource_attr->mode,
-                'rule' => $resource_attr->rule ? : '',
-                'ctime' => $now,
-                'mtime' => $now,
-            ];
-            (new \ResourceAttr())->create()->set($data)->save();
+        $name = $resource_attr->name;
+        $src_id = $resource_attr->src_id;
+        $owner_id = $resource_attr->owner_id ? : 0;
+        $role_id = $resource_attr->role_id ? : 0;
+        $mode = $resource_attr->mode;
+        $rule = $resource_attr->rule ? : '';
+
+        $id = (new \ResourceAttr())->add($name, $src_id, $owner_id, $role_id, $mode, $rule);
+        if ($id) {
             $ret->ret = \Constant::RET_OK;
-        } catch (\Exception $e) {
+        } else {
             $ret->ret = \Constant::RET_DATA_CONFLICT;
+            $ret->data = 'ResourceAttr exists!';
         }
 
         return $ret;
@@ -39,20 +36,17 @@ class ResourceAttrHandler
     /**
      * 删除资源权限属性.
      *
-     * @param int $resource_attr_id
+     * @param string $name
+     * @param int    $src_id
      *
      * @return \Authority\CommonRet $ret
      */
-    public static function remove($resource_attr_id)
+    public static function remove($name, $src_id)
     {
         $ret = new CommonRet();
 
-        $item = (new \ResourceAttr())->find_one($resource_attr_id);
-        if ($item) {
-            $ret->ret = $item->delete() ? \Constant::RET_OK : \Constant::RET_SYS_ERROR;
-        } else {
-            $ret->ret = \Constant::RET_DATA_NO_FOUND;
-        }
+        $count = (new \ResourceAttr())->remove($name, $src_id);
+        $ret->ret = $count ? \Constant::RET_OK : \Constant::RET_DATA_NO_FOUND;
 
         return $ret;
     }
@@ -60,25 +54,26 @@ class ResourceAttrHandler
     /**
      * 更新资源权限属性.
      *
-     * @param int                     $resource_attr_id
+     * @param string                  $name
+     * @param int                     $src_id
      * @param \Authority\ResourceAttr $resource_attr
      *
      * @return \Authority\CommonRet $ret
      */
-    public static function update($resource_attr_id, ResourceAttr $resource_attr)
+    public static function update($name, $src_id, ResourceAttr $resource_attr)
     {
         $ret = new CommonRet();
 
-        $item = (new \ResourceAttr())->find_one($resource_attr_id);
+        $model = new \ResourceAttr();
+        $item = $model->getById($name, $src_id);
         if ($item) {
-            $data = [
-                'owner_id' => $resource_attr->owner_id ? : 0,
-                'role_id' => $resource_attr->role_id ? : 0,
-                'mode' => $resource_attr->mode,
-                'rule' => $resource_attr->rule ? : '',
-                'mtime' => date('Y-m-d H:i:s'),
-            ];
-            $ret->ret = $item->set($data)->save() ? \Constant::RET_OK : \Constant::RET_SYS_ERROR;
+            $owner_id = $resource_attr->owner_id ? : $item['owner_id'];
+            $role_id = $resource_attr->role_id ? : $item['role_id'];
+            $mode = $resource_attr->mode ? : $item['mode'];
+            $rule = $resource_attr->rule ? : $item['rule'];
+            
+            $model->update($name, $src_id, $owner_id, $role_id, $mode, $rule);
+            $ret->ret = \Constant::RET_OK;
         } else {
             $ret->ret = \Constant::RET_DATA_NO_FOUND;
         }
@@ -99,31 +94,31 @@ class ResourceAttrHandler
         $ret->ret = \Constant::RET_OK;
 
         $model = new \ResourceAttr();
-        if ($conditions = $search->conditions) {
-            foreach ($conditions as $condition) {
-                $expr = $condition->expr ? : 'where';
-                $model->$expr($condition->field, $condition->value);
+        $sql = 'SELECT * FROM resource_attr';
+        $total_sql = 'SELECT COUNT(1) FROM resource_attr';
+        if ($search->conditions) {
+            $where = [];
+            foreach ($search->conditions as $condition) {
+                $expr = $condition->expr ? : '=';
+                $where[] = "{$condition->field} {$expr} '{$condition->value}'";
             }
+            $where = implode(' AND ', $where);
+            $sql .= " WHERE {$where}";
+            $total_sql .= " WHERE {$where}";
         }
-        $ret->total = $model->count();
-
-        $model->clean();
-        if ($conditions = $search->conditions) {
-            foreach ($conditions as $condition) {
-                $expr = $condition->expr ? : 'where';
-                $model->$expr($condition->field, $condition->value);
-            }
-        }
-        if ($page = $search->page) {
+        $ret->total = $model->query($total_sql)->fetch(\PDO::FETCH_COLUMN);
+        if ($search->page) {
             $pagesize = $search->pagesize ? : 20;
-            $model->offset(($page - 1) * $pagesize)->limit($pagesize);
+            $offset = ($page - 1) * $pagesize;
+            $sql .= " LIMIT {$offset},{$pagesize}";
         }
 
-        $result = $model->order_by_desc('id')->find_array();
-        $resource_attrs = [];
-        if ($result) {
-            foreach ($result as $item) {
-                $resource_attrs[] = new ResourceAttr(
+        $resource_attrs = $model->query($sql)->fetchAll(\PDO::FETCH_ASSOC);
+
+        if ($resource_attrs) {
+            $data = [];
+            foreach ($resource_attrs as $item) {
+                $data[] = new ResourceAttr(
                     [
                         'id' => $item['id'],
                         'name' => $item['name'],

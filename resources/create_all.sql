@@ -2,7 +2,6 @@ CREATE TABLE `user` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增ID',
   `username` char(64) NOT NULL COMMENT '用户名',
   `nickname` varchar(64) NOT NULL DEFAULT '' COMMENT '昵称',
-  `password` char(64) NOT NULL DEFAULT '' COMMENT '密码',
   `email` varchar(64) NOT NULL DEFAULT '' COMMENT '邮箱',
   `telephone` char(15) NOT NULL DEFAULT '' COMMENT '手机号码',
   `ctime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT '创建时间',

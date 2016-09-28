@@ -16,24 +16,14 @@ class GroupHandler
     {
         $ret = new CommonRet;
 
-        $now = date('Y-m-d H:i:s');
-        $data = [
-            'name' => $group->name,
-            'type' => $group->type,
-            'rule_id' => $group->rule_id ? : null,
-            'description' => $group->description,
-            'ctime' => $now,
-            'mtime' => $now,
-        ];
-
         $model = new \AuthItem();
         try {
-            $model->create()->set($data)->save();
+            $id = $model->add($group->name, $group->type, $group->rule_id, $group->description, '');
             $ret->ret = \Constant::RET_OK;
-            $ret->data = json_encode(['id' => $model->id()]);
+            $ret->data = json_encode(['id' => $id]);
 
             if ($parent && $group->type == \Constant::GROUP) {
-                (new \AuthItemChild())->create()->set(['parent' => $parent, 'child' => $model->id()])->save();
+                (new \AuthItemChild())->add($parent, $id);
             }
         } catch (\Exception $e) {
             $ret->ret = \Constant::RET_DATA_CONFLICT;
@@ -53,14 +43,15 @@ class GroupHandler
     {
         $ret = new CommonRet;
 
-        $assignments = (new \AuthAssignment())->where('item_id', $group_id)->find_array();
-        $user_ids = array_column($assignments, 'user_id');
-
-        $item = (new \AuthItem())->where('type', [\Constant::GROUP, \Constant::ORG])->find_one($id);
-        if ($item) {
-            $item->delete();
-            $ret->ret = \Constant::RET_OK;
-            $ret->data = implode(',', $user_ids);
+        $model = new \AuthItem();
+        $item = $model->getById($group_id);
+        if ($item && in_array($item['type'], [\Constant::GROUP, \Constant::ORG])) {
+            $count = $model->remove($item['type'], $group_id);
+            if (!$count) {
+                $ret->ret = \Constant::RET_DATA_NO_FOUND;
+            } else {
+                $ret->ret = \Constant::RET_OK;
+            }
         } else {
             $ret->ret = \Constant::RET_DATA_NO_FOUND;
         }
@@ -79,79 +70,19 @@ class GroupHandler
     {
         $ret = new CommonRet;
 
-        $model = (new \AuthItem())->where_in('type', [\Constant::GROUP, \Constant::ORG])->find_one($group_id);
-        if ($model) {
-            $data = ['mtime' => date('Y-m-d H:i:s')];
-            if ($group->name) {
-                $data['name'] = $group->name;
-            }
-            if ($group->type) {
-                $data['type'] = $group->type;
-            }
-            if ($group->description) {
-                $data['description'] = $group->description;
-            }
+        $model = new \AuthItem();
+        $item = $model->getById($group_id);
+        if (in_array($item['type'], [\Constant::GROUP, \Constant::ORG])) {
+            $name = $group->name ? : $item['name'];
+            $description = $group->description ? : $item['description'];
             try {
-                $model->set($data)->save();
+                $model->update($group_id, $item['type'], $name, $description);
                 $ret->ret = \Constant::RET_OK;
             } catch (\Exception $e) {
                 $ret->ret = \Constant::RET_DATA_CONFLICT;
             }
         } else {
             $ret->ret = \Constant::RET_DATA_NO_FOUND;
-        }
-
-        return $ret;
-    }
-
-    /**
-     * 获取权限组/角色组列表.
-     *
-     * @param \Authority\Search $search
-     *
-     * @return \Authority\GroupRet $ret
-     */
-    public static function getList(Search $search)
-    {
-        $ret = new GroupRet();
-
-        $ret->ret = \Constant::RET_OK;
-        $model = new \AuthItem();
-
-        if ($conditions = $search->conditions) {
-            foreach ($conditions as $condition) {
-                $expr = $condition->expr ? : 'where';
-                $model->$expr($condition->field, $condition->value);
-            }
-        }
-        $ret->total = $model->count();
-
-        $model->clean();
-        if ($conditions = $search->conditions) {
-            foreach ($conditions as $condition) {
-                $expr = $condition->expr ? : 'where';
-                $model->$expr($condition->field, $condition->value);
-            }
-        }
-        if ($page = $search->page) {
-            $pagesize = $search->pagesize ? : 20;
-            $model->offset(($page - 1) * $pagesize)->limit($pagesize);
-        }
-
-        $result = $model->find_array();
-        if ($result) {
-            $groups = [];
-            foreach ($result as $group) {
-                $groups[] = new Group(
-                    [
-                        'id' => $group['id'],
-                        'type' => $group['type'],
-                        'name' => $group['name'],
-                        'description' => $group['description'],
-                    ]
-                );
-            }
-            $ret->groups = $groups;
         }
 
         return $ret;
@@ -170,16 +101,18 @@ class GroupHandler
         $ret = new GroupRlatRet();
         $ret->ret = \Constant::RET_OK;
 
+        $auth_item = new \AuthItem();
+
         if (in_array('group', $rlat)) {
             // 获取组信息
-            $item = (new \AuthItem())->where_in('type', [\Constant::ORG, \Constant::GROUP])->find_one($group_id);
-            if ($item) {
+            $item = $auth_item->getById($group_id);
+            if ($item && in_array($item['type'], [\Constant::ORG, \Constant::GROUP])) {
                 $ret->group = new Group(
                     [
-                        'id' => $item->id,
-                        'name' => $item->name,
-                        'type' => $item->type,
-                        'description' => $item->description,
+                        'id' => $item['id'],
+                        'name' => $item['name'],
+                        'type' => $item['type'],
+                        'description' => $item['description'],
                     ]
                 );
             }
@@ -187,16 +120,16 @@ class GroupHandler
 
         if (in_array('parent', $rlat)) {
             // 获取父级组信息
-            $relation = (new \AuthItemChild())->where('child', $group_id)->select('parent')->find_one();
-            if ($relation) {
-                $item = (new \AuthItem())->where('type', \Constant::ORG)->find_one($relation->parent);
-                if ($item) {
+            $parent_ids = (new \AuthItemChild())->getParent($group_id);
+            if ($parent_ids) {
+                $parent = $auth_item->getById(current($parent_ids));
+                if ($parent && $parent['type'] == \Constant::ORG) {
                     $ret->parent = new Group(
                         [
-                            'id' => $item->id,
-                            'name' => $item->name,
-                            'type' => $item->type,
-                            'description' => $item->description,
+                            'id' => $parent['id'],
+                            'name' => $parent['name'],
+                            'type' => $parent['type'],
+                            'description' => $parent['description'],
                         ]
                     );
                 }
@@ -205,22 +138,21 @@ class GroupHandler
 
         if (in_array('users', $rlat)) {
             // 获取拥有该组权限的用户名
-            $uids = (new \AuthAssignment())->where('item_id', $group_id)->select('user_id')->find_array();
+            $uids = (new \AuthAssignment())->getUserIdsByItemId($group_id);
             if ($uids) {
-                $uids = array_column($uids, 'user_id');
-                $users = (new \User())->where_in('id', $uids)->select('username')->find_array();
+                $users = (new \User())->getMulti($uids);
                 $ret->users = array_column($users, 'username');
             }
         }
 
         if (in_array('points', $rlat)) {
             // 获取该组拥有的权限点
-            $items = (new \AuthItem())->getItems();
+            $items = (new \AuthItem())->getAll();
             $children = (new \AuthItemChild())->getChildren($group_id);
             $points = [];
-            foreach ($children[$group_id] as $child) {
-                if ($items[$child]->type == \Constant::POINT) {
-                    $points[] = $items[$child]->id;
+            foreach ($children as $child) {
+                if ($items[$child]['type'] == \Constant::POINT) {
+                    $points[] = $items[$child]['id'];
                 }
             }
             $ret->points = $points;
@@ -241,54 +173,51 @@ class GroupHandler
         $ret = new AssignablePointRet();
         $ret->ret = \Constant::RET_OK;
 
-        $items = (new \AuthItem())->getItems();
+        $items = (new \AuthItem())->getAll();
+        $relations = (new \AuthItemChild())->getRelations();
 
-        if ($items[$group_id]->type == \Constant::ORG) {
+        if ($items[$group_id]['type'] == \Constant::ORG) {
             // 获取权限组的权限点
             $points = [];
-            $auth_item_child = new \AuthItemChild();
             if ($group_id == \Constant::ADMIN) {
                 foreach ($items as $item) {
-                    if ($item->type == \Constant::POINT) {
-                        $points[] = $item->id;
+                    if ($item['type'] == \Constant::POINT) {
+                        $points[] = $item['id'];
                     }
                 }
             } else {
-                $children = $auth_item_child->getChildren($group_id);
-                foreach ($children[$group_id] as $id) {
-                    if ($items[$id]->type == \Constant::POINT) {
+                foreach ($relations['parents'][$group_id] as $id) {
+                    if ($items[$id]['type'] == \Constant::POINT) {
                         $points[] = $id;
                     }
                 }
             }
 
             // 获取权限点及其分类的关系
-            $parents = $auth_item_child->getParent($points);
-            $cate_map = [];
-            foreach ($parents as $child => $parent) {
-                foreach ($parent as $p) {
-                    if ($items[$p]->type == \Constant::CATEGORY) {
-                        if (!isset($cate_map[$p])) {
-                            $cate_map[$p] = [];
+            $cate_point_ids = [];
+            foreach ($points as $point) {
+                foreach ($relations['children'][$point] as $parent) {
+                    if ($items[$parent]['type'] == \Constant::CATEGORY) {
+                        if (!isset($cate_point_ids[$parent])) {
+                            $cate_point_ids[$parent] = [];
                         }
-                        $cate_map[$p][] = $child;
+                        $cate_point_ids[$parent][] = $point;
                     }
                 }
             }
 
-            // 构建返回对象
             $catepoints = [];
-            foreach ($cate_map as $cate => $value) {
+            foreach ($cate_point_ids as $parent => $points) {
                 $catepoint = new CategoryPoint();
-                $catepoint->id = $cate;
-                $catepoint->name = $items[$cate]->name;
+                $catepoint->id = $parent;
+                $catepoint->name = $items[$parent]['name'];
                 $children = [];
-                foreach ($value as $v) {
+                foreach ($points as $point) {
                     $children[] = new Point(
                         [
-                            'id' => $v,
-                            'name' => $items[$v]->name,
-                            'data' => $items[$v]->data,
+                            'id' => $point,
+                            'name' => $items[$point]['name'],
+                            'data' => $items[$point]['data'],
                         ]
                     );
                 }
@@ -314,55 +243,40 @@ class GroupHandler
         $ret = new CommonRet();
         $ret->ret = \Constant::RET_OK;
 
+        $items = (new \AuthItem())->getAll();
         $auth_item_child = new \AuthItemChild();
-        // 获取组之前的权限点
-        $children = $auth_item_child->where('parent', $group_id)
-            ->join('auth_item', 'auth_item.id = auth_item_child.child')
-            ->select(['child','type'])
-            ->find_array();
-        $group_ids = $origin = $child_group = [];
+        $children = $auth_item_child->getChildren($group_id);
+
+        // group_ids - 受影响到的组 origin_points - 原始权限点
+        $group_ids = $origin_points = [];
         $group_ids[] = $group_id;
-        foreach ($children as $item) {
-            if ($item['type'] == \Constant::POINT) {
-                $origin[] = $item['child'];
+        foreach ($children as $child) {
+            if ($items[$child]['type'] == \Constant::POINT) {
+                $origin_points[] = $child;
             }
-            if ($item['type'] == \Constant::GROUP) {
-                $child_group[] = $item['child'];
+            if ($items[$child]['type'] == \Constant::GROUP) {
+                $group_ids[] = $child;
             }
         }
+        // var_dump($group_ids, $origin_points);
 
-        // 构建要删除及添加的权限点
-        if ($origin) {
-            $deleted = array_diff($origin, $points);
+        // 构建要删除的权限点
+        if ($origin_points) {
+            $deleted = array_diff($origin_points, $points);
             if ($deleted) {
-                if ($child_group) {
-                    $group_ids = array_merge($group_ids, $child_group);
-                }
-                if (!$auth_item_child->clean()->where_in('parent', $group_ids)->where_in('child', $deleted)->delete_many()) {
-                    $ret->ret = \Constant::RET_SYS_ERROR;
-                    return $ret;
-                }
+                // 删除受影响到的权限组的权限点
+                $auth_item_child->removeMulti($group_ids, $deleted);
             }
         }
 
-        $user_ids = (new \AuthAssignment())->where_in('item_id', $group_ids)->select('user_id')->find_array();
-        $user_ids = array_column($user_ids, 'user_id');
-        $data = implode(',', $user_ids);
-
-        $added = array_diff($points, $origin);
-        if ($added == [0] || !$added) {
-            $ret->data = $data;
+        // 构建要添加的权限点，如果要清空所有权限点 $points = [0]
+        $added = array_diff($points, $origin_points);
+        if ($points == [0] || !$added) {
+            // 没有要添加的权限点，直接返回
             return $ret;
         }
 
-        foreach ($added as &$item) {
-            $item = "({$group_id}, {$item})";
-        }
-
-        if (!\ORM::raw_execute('INSERT INTO auth_item_child (parent, child) VALUES '.implode(',', $added).';')) {
-            $ret->ret = \Constant::RET_SYS_ERROR;
-        }
-        $ret->data = $data;
+        $auth_item_child->add($group_id, $added);
 
         return $ret;
     }

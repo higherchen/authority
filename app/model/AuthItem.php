@@ -2,98 +2,70 @@
 
 class AuthItem extends Model
 {
-    protected $_table = 'auth_item';
 
-    public function getItems()
+    const GET_ALL_SQL = 'SELECT * FROM auth_item ORDER BY mtime DESC';
+    const GET_BY_TYPE_SQL = 'SELECT * FROM auth_item WHERE type=?';
+    const GET_BY_ID_SQL = 'SELECT * FROM auth_item WHERE id=?';
+    const GET_BY_NAME_SQL = 'SELECT * FROM auth_item WHERE name=?';
+    const INSERT_SQL = 'INSERT INTO auth_item (name,type,rule_id,description,data,ctime,mtime) VALUES (?,?,?,?,?,?,?)';
+    const UPDATE_SQL = 'UPDATE auth_item SET name=?,description=?,data=?,mtime=? WHERE type=? AND id=?';
+    const DELETE_BY_ID_SQL = 'DELETE FROM auth_item WHERE type=? AND id=?';
+
+    public function getAll()
     {
-        $result = $this->clean()->order_by_desc('mtime')->find_many();
-        $items = [];
-        foreach ($result as $item) {
-            $items[$item->id] = $item;
-        }
+        $items = $this->_db->query(self::GET_ALL_SQL)->fetchAll(PDO::FETCH_ASSOC);
 
-        return $items;
+        return array_column($items, null, 'id');
     }
 
-    public function getItemByType($type, $is_array = true)
+    public function getByType($type)
     {
-        $result = [];
-        foreach ($this->getItems() as $id => $item) {
-            if ($item->type == $type) {
-                $result[$id] = $is_array ? $item->as_array() : $item;
-            }
-        }
+        $stmt = $this->getStatement(self::GET_BY_TYPE_SQL);
+        $stmt->execute([$type]);
+        $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        return $result;
+        return array_column($items, null, 'id');
     }
 
-    public function addItem($name, $type, $description = '', $data = '')
+    public function add($name, $type, $rule_id = null, $description = '', $data = '')
     {
+        $stmt = $this->getStatement(self::INSERT_SQL);
         $now = date('Y-m-d H:i:s');
-        $info = ['name' => $name, 'type' => $type, 'ctime' => $now, 'mtime' => $now];
-        if ($description) {
-            $info['description'] = $description;
-        }
-        if ($data) {
-            $info['data'] = $data;
-        }
-        $item = $this->create();
-        $item->set($info);
+        $stmt->execute([$name, $type, $rule_id, $description, $data, $now, $now]);
+        $count = $stmt->rowCount();
 
-        return $item->save() ? $item->id() : false;
+        return $count ? $this->lastInsertId() : $count;
     }
 
-    public function updateItem($item_id, $name, $type, $description)
+    public function update($item_id, $type, $name, $description, $data = '')
     {
-        $items = $this->getItems();
-        if (!isset($items[$item_id])) {
-            return false;
-        }
-        $item = $items[$item_id];
+        $stmt = $this->getStatement(self::UPDATE_SQL);
+        $stmt->execute([$name, $description, $data, date('Y-m-d H:i:s'), $type, $item_id]);
 
-        return $item->set(['name' => $name, 'type' => $type, 'description' => $description, 'mtime' => date('Y-m-d H:i:s')])->save();
+        return $stmt->rowCount();
     }
 
-    public function getItemById($id, $is_array = true)
+    public function getById($id)
     {
-        $items = $this->getItems();
-        if (!is_array($id)) {
-            if (!isset($items[$id])) {
-                return [];
-            }
+        $stmt = $this->getStatement(self::GET_BY_ID_SQL);
+        $stmt->execute([$id]);
 
-            return $is_array ? $items[$id]->as_array() : $items[$id];
-        } else {
-            $result = [];
-            foreach ($id as $i) {
-                if (isset($items[$i])) {
-                    $result[$i] = $is_array ? $items[$i]->as_array() : $items[$i];
-                }
-            }
-
-            return $result;
-        }
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function getItemByName($name, $is_array = true)
+    public function getByName($name)
     {
-        foreach ($this->getItems() as $item) {
-            if ($item['name'] == $name) {
-                return $is_array ? $item->as_array() : $item;
-            }
-        }
+        $stmt = $this->getStatement(self::GET_BY_NAME_SQL);
+        $stmt->execute([$name]);
 
-        return;
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function deleteItem($id)
+    public function remove($type, $id)
     {
-        $items = $this->getItems();
-        if (!isset($items[$item_id])) {
-            return false;
-        }
-        $item = $items[$item_id];
+        $stmt = $this->getStatement(self::DELETE_BY_ID_SQL);
+        $stmt->execute([$type, $id]);
 
-        return $item->delete();
+        return $stmt->rowCount();
     }
 }

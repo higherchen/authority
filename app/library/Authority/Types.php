@@ -2022,155 +2022,6 @@ class CategoryRet {
 
 }
 
-class GroupRet {
-  static $_TSPEC;
-
-  /**
-   * @var int
-   */
-  public $ret = null;
-  /**
-   * @var int
-   */
-  public $total = null;
-  /**
-   * @var \Authority\Group[]
-   */
-  public $groups = null;
-
-  public function __construct($vals=null) {
-    if (!isset(self::$_TSPEC)) {
-      self::$_TSPEC = array(
-        1 => array(
-          'var' => 'ret',
-          'type' => TType::I32,
-          ),
-        2 => array(
-          'var' => 'total',
-          'type' => TType::I32,
-          ),
-        3 => array(
-          'var' => 'groups',
-          'type' => TType::LST,
-          'etype' => TType::STRUCT,
-          'elem' => array(
-            'type' => TType::STRUCT,
-            'class' => '\Authority\Group',
-            ),
-          ),
-        );
-    }
-    if (is_array($vals)) {
-      if (isset($vals['ret'])) {
-        $this->ret = $vals['ret'];
-      }
-      if (isset($vals['total'])) {
-        $this->total = $vals['total'];
-      }
-      if (isset($vals['groups'])) {
-        $this->groups = $vals['groups'];
-      }
-    }
-  }
-
-  public function getName() {
-    return 'GroupRet';
-  }
-
-  public function read($input)
-  {
-    $xfer = 0;
-    $fname = null;
-    $ftype = 0;
-    $fid = 0;
-    $xfer += $input->readStructBegin($fname);
-    while (true)
-    {
-      $xfer += $input->readFieldBegin($fname, $ftype, $fid);
-      if ($ftype == TType::STOP) {
-        break;
-      }
-      switch ($fid)
-      {
-        case 1:
-          if ($ftype == TType::I32) {
-            $xfer += $input->readI32($this->ret);
-          } else {
-            $xfer += $input->skip($ftype);
-          }
-          break;
-        case 2:
-          if ($ftype == TType::I32) {
-            $xfer += $input->readI32($this->total);
-          } else {
-            $xfer += $input->skip($ftype);
-          }
-          break;
-        case 3:
-          if ($ftype == TType::LST) {
-            $this->groups = array();
-            $_size56 = 0;
-            $_etype59 = 0;
-            $xfer += $input->readListBegin($_etype59, $_size56);
-            for ($_i60 = 0; $_i60 < $_size56; ++$_i60)
-            {
-              $elem61 = null;
-              $elem61 = new \Authority\Group();
-              $xfer += $elem61->read($input);
-              $this->groups []= $elem61;
-            }
-            $xfer += $input->readListEnd();
-          } else {
-            $xfer += $input->skip($ftype);
-          }
-          break;
-        default:
-          $xfer += $input->skip($ftype);
-          break;
-      }
-      $xfer += $input->readFieldEnd();
-    }
-    $xfer += $input->readStructEnd();
-    return $xfer;
-  }
-
-  public function write($output) {
-    $xfer = 0;
-    $xfer += $output->writeStructBegin('GroupRet');
-    if ($this->ret !== null) {
-      $xfer += $output->writeFieldBegin('ret', TType::I32, 1);
-      $xfer += $output->writeI32($this->ret);
-      $xfer += $output->writeFieldEnd();
-    }
-    if ($this->total !== null) {
-      $xfer += $output->writeFieldBegin('total', TType::I32, 2);
-      $xfer += $output->writeI32($this->total);
-      $xfer += $output->writeFieldEnd();
-    }
-    if ($this->groups !== null) {
-      if (!is_array($this->groups)) {
-        throw new TProtocolException('Bad type in structure.', TProtocolException::INVALID_DATA);
-      }
-      $xfer += $output->writeFieldBegin('groups', TType::LST, 3);
-      {
-        $output->writeListBegin(TType::STRUCT, count($this->groups));
-        {
-          foreach ($this->groups as $iter62)
-          {
-            $xfer += $iter62->write($output);
-          }
-        }
-        $output->writeListEnd();
-      }
-      $xfer += $output->writeFieldEnd();
-    }
-    $xfer += $output->writeFieldStop();
-    $xfer += $output->writeStructEnd();
-    return $xfer;
-  }
-
-}
-
 class GroupRlatRet {
   static $_TSPEC;
 
@@ -2294,14 +2145,14 @@ class GroupRlatRet {
         case 4:
           if ($ftype == TType::LST) {
             $this->users = array();
-            $_size63 = 0;
-            $_etype66 = 0;
-            $xfer += $input->readListBegin($_etype66, $_size63);
-            for ($_i67 = 0; $_i67 < $_size63; ++$_i67)
+            $_size56 = 0;
+            $_etype59 = 0;
+            $xfer += $input->readListBegin($_etype59, $_size56);
+            for ($_i60 = 0; $_i60 < $_size56; ++$_i60)
             {
-              $elem68 = null;
-              $xfer += $input->readString($elem68);
-              $this->users []= $elem68;
+              $elem61 = null;
+              $xfer += $input->readString($elem61);
+              $this->users []= $elem61;
             }
             $xfer += $input->readListEnd();
           } else {
@@ -2311,14 +2162,14 @@ class GroupRlatRet {
         case 5:
           if ($ftype == TType::LST) {
             $this->points = array();
-            $_size69 = 0;
-            $_etype72 = 0;
-            $xfer += $input->readListBegin($_etype72, $_size69);
-            for ($_i73 = 0; $_i73 < $_size69; ++$_i73)
+            $_size62 = 0;
+            $_etype65 = 0;
+            $xfer += $input->readListBegin($_etype65, $_size62);
+            for ($_i66 = 0; $_i66 < $_size62; ++$_i66)
             {
-              $elem74 = null;
-              $xfer += $input->readI32($elem74);
-              $this->points []= $elem74;
+              $elem67 = null;
+              $xfer += $input->readI32($elem67);
+              $this->points []= $elem67;
             }
             $xfer += $input->readListEnd();
           } else {
@@ -2367,9 +2218,9 @@ class GroupRlatRet {
       {
         $output->writeListBegin(TType::STRING, count($this->users));
         {
-          foreach ($this->users as $iter75)
+          foreach ($this->users as $iter68)
           {
-            $xfer += $output->writeString($iter75);
+            $xfer += $output->writeString($iter68);
           }
         }
         $output->writeListEnd();
@@ -2384,9 +2235,9 @@ class GroupRlatRet {
       {
         $output->writeListBegin(TType::I32, count($this->points));
         {
-          foreach ($this->points as $iter76)
+          foreach ($this->points as $iter69)
           {
-            $xfer += $output->writeI32($iter76);
+            $xfer += $output->writeI32($iter69);
           }
         }
         $output->writeListEnd();
@@ -2469,15 +2320,15 @@ class AssignablePointRet {
         case 2:
           if ($ftype == TType::LST) {
             $this->points = array();
-            $_size77 = 0;
-            $_etype80 = 0;
-            $xfer += $input->readListBegin($_etype80, $_size77);
-            for ($_i81 = 0; $_i81 < $_size77; ++$_i81)
+            $_size70 = 0;
+            $_etype73 = 0;
+            $xfer += $input->readListBegin($_etype73, $_size70);
+            for ($_i74 = 0; $_i74 < $_size70; ++$_i74)
             {
-              $elem82 = null;
-              $elem82 = new \Authority\CategoryPoint();
-              $xfer += $elem82->read($input);
-              $this->points []= $elem82;
+              $elem75 = null;
+              $elem75 = new \Authority\CategoryPoint();
+              $xfer += $elem75->read($input);
+              $this->points []= $elem75;
             }
             $xfer += $input->readListEnd();
           } else {
@@ -2510,9 +2361,9 @@ class AssignablePointRet {
       {
         $output->writeListBegin(TType::STRUCT, count($this->points));
         {
-          foreach ($this->points as $iter83)
+          foreach ($this->points as $iter76)
           {
-            $xfer += $iter83->write($output);
+            $xfer += $iter76->write($output);
           }
         }
         $output->writeListEnd();
@@ -2548,7 +2399,7 @@ class ResourceAttr {
   /**
    * @var int
    */
-  public $group_id = null;
+  public $role_id = null;
   /**
    * @var string
    */
@@ -2574,7 +2425,7 @@ class ResourceAttr {
           'type' => TType::I32,
           ),
         5 => array(
-          'var' => 'group_id',
+          'var' => 'role_id',
           'type' => TType::I32,
           ),
         6 => array(
@@ -2596,8 +2447,8 @@ class ResourceAttr {
       if (isset($vals['owner_id'])) {
         $this->owner_id = $vals['owner_id'];
       }
-      if (isset($vals['group_id'])) {
-        $this->group_id = $vals['group_id'];
+      if (isset($vals['role_id'])) {
+        $this->role_id = $vals['role_id'];
       }
       if (isset($vals['mode'])) {
         $this->mode = $vals['mode'];
@@ -2654,7 +2505,7 @@ class ResourceAttr {
           break;
         case 5:
           if ($ftype == TType::I32) {
-            $xfer += $input->readI32($this->group_id);
+            $xfer += $input->readI32($this->role_id);
           } else {
             $xfer += $input->skip($ftype);
           }
@@ -2699,9 +2550,9 @@ class ResourceAttr {
       $xfer += $output->writeI32($this->owner_id);
       $xfer += $output->writeFieldEnd();
     }
-    if ($this->group_id !== null) {
-      $xfer += $output->writeFieldBegin('group_id', TType::I32, 5);
-      $xfer += $output->writeI32($this->group_id);
+    if ($this->role_id !== null) {
+      $xfer += $output->writeFieldBegin('role_id', TType::I32, 5);
+      $xfer += $output->writeI32($this->role_id);
       $xfer += $output->writeFieldEnd();
     }
     if ($this->mode !== null) {
@@ -2847,7 +2698,7 @@ class RoleMember {
   /**
    * @var int
    */
-  public $group_id = null;
+  public $role_id = null;
   /**
    * @var int
    */
@@ -2861,7 +2712,7 @@ class RoleMember {
           'type' => TType::I32,
           ),
         2 => array(
-          'var' => 'group_id',
+          'var' => 'role_id',
           'type' => TType::I32,
           ),
         3 => array(
@@ -2874,8 +2725,8 @@ class RoleMember {
       if (isset($vals['id'])) {
         $this->id = $vals['id'];
       }
-      if (isset($vals['group_id'])) {
-        $this->group_id = $vals['group_id'];
+      if (isset($vals['role_id'])) {
+        $this->role_id = $vals['role_id'];
       }
       if (isset($vals['user_id'])) {
         $this->user_id = $vals['user_id'];
@@ -2911,7 +2762,7 @@ class RoleMember {
           break;
         case 2:
           if ($ftype == TType::I32) {
-            $xfer += $input->readI32($this->group_id);
+            $xfer += $input->readI32($this->role_id);
           } else {
             $xfer += $input->skip($ftype);
           }
@@ -2941,9 +2792,9 @@ class RoleMember {
       $xfer += $output->writeI32($this->id);
       $xfer += $output->writeFieldEnd();
     }
-    if ($this->group_id !== null) {
-      $xfer += $output->writeFieldBegin('group_id', TType::I32, 2);
-      $xfer += $output->writeI32($this->group_id);
+    if ($this->role_id !== null) {
+      $xfer += $output->writeFieldBegin('role_id', TType::I32, 2);
+      $xfer += $output->writeI32($this->role_id);
       $xfer += $output->writeFieldEnd();
     }
     if ($this->user_id !== null) {
@@ -2966,6 +2817,10 @@ class ResourceAttrRet {
    */
   public $ret = null;
   /**
+   * @var int
+   */
+  public $total = null;
+  /**
    * @var \Authority\ResourceAttr[]
    */
   public $resource_attrs = null;
@@ -2978,6 +2833,10 @@ class ResourceAttrRet {
           'type' => TType::I32,
           ),
         2 => array(
+          'var' => 'total',
+          'type' => TType::I32,
+          ),
+        3 => array(
           'var' => 'resource_attrs',
           'type' => TType::LST,
           'etype' => TType::STRUCT,
@@ -2991,6 +2850,9 @@ class ResourceAttrRet {
     if (is_array($vals)) {
       if (isset($vals['ret'])) {
         $this->ret = $vals['ret'];
+      }
+      if (isset($vals['total'])) {
+        $this->total = $vals['total'];
       }
       if (isset($vals['resource_attrs'])) {
         $this->resource_attrs = $vals['resource_attrs'];
@@ -3025,17 +2887,24 @@ class ResourceAttrRet {
           }
           break;
         case 2:
+          if ($ftype == TType::I32) {
+            $xfer += $input->readI32($this->total);
+          } else {
+            $xfer += $input->skip($ftype);
+          }
+          break;
+        case 3:
           if ($ftype == TType::LST) {
             $this->resource_attrs = array();
-            $_size84 = 0;
-            $_etype87 = 0;
-            $xfer += $input->readListBegin($_etype87, $_size84);
-            for ($_i88 = 0; $_i88 < $_size84; ++$_i88)
+            $_size77 = 0;
+            $_etype80 = 0;
+            $xfer += $input->readListBegin($_etype80, $_size77);
+            for ($_i81 = 0; $_i81 < $_size77; ++$_i81)
             {
-              $elem89 = null;
-              $elem89 = new \Authority\ResourceAttr();
-              $xfer += $elem89->read($input);
-              $this->resource_attrs []= $elem89;
+              $elem82 = null;
+              $elem82 = new \Authority\ResourceAttr();
+              $xfer += $elem82->read($input);
+              $this->resource_attrs []= $elem82;
             }
             $xfer += $input->readListEnd();
           } else {
@@ -3060,17 +2929,22 @@ class ResourceAttrRet {
       $xfer += $output->writeI32($this->ret);
       $xfer += $output->writeFieldEnd();
     }
+    if ($this->total !== null) {
+      $xfer += $output->writeFieldBegin('total', TType::I32, 2);
+      $xfer += $output->writeI32($this->total);
+      $xfer += $output->writeFieldEnd();
+    }
     if ($this->resource_attrs !== null) {
       if (!is_array($this->resource_attrs)) {
         throw new TProtocolException('Bad type in structure.', TProtocolException::INVALID_DATA);
       }
-      $xfer += $output->writeFieldBegin('resource_attrs', TType::LST, 2);
+      $xfer += $output->writeFieldBegin('resource_attrs', TType::LST, 3);
       {
         $output->writeListBegin(TType::STRUCT, count($this->resource_attrs));
         {
-          foreach ($this->resource_attrs as $iter90)
+          foreach ($this->resource_attrs as $iter83)
           {
-            $xfer += $iter90->write($output);
+            $xfer += $iter83->write($output);
           }
         }
         $output->writeListEnd();
@@ -3092,6 +2966,10 @@ class RoleRet {
    */
   public $ret = null;
   /**
+   * @var int
+   */
+  public $total = null;
+  /**
    * @var \Authority\Role[]
    */
   public $roles = null;
@@ -3104,6 +2982,10 @@ class RoleRet {
           'type' => TType::I32,
           ),
         2 => array(
+          'var' => 'total',
+          'type' => TType::I32,
+          ),
+        3 => array(
           'var' => 'roles',
           'type' => TType::LST,
           'etype' => TType::STRUCT,
@@ -3117,6 +2999,9 @@ class RoleRet {
     if (is_array($vals)) {
       if (isset($vals['ret'])) {
         $this->ret = $vals['ret'];
+      }
+      if (isset($vals['total'])) {
+        $this->total = $vals['total'];
       }
       if (isset($vals['roles'])) {
         $this->roles = $vals['roles'];
@@ -3151,17 +3036,24 @@ class RoleRet {
           }
           break;
         case 2:
+          if ($ftype == TType::I32) {
+            $xfer += $input->readI32($this->total);
+          } else {
+            $xfer += $input->skip($ftype);
+          }
+          break;
+        case 3:
           if ($ftype == TType::LST) {
             $this->roles = array();
-            $_size91 = 0;
-            $_etype94 = 0;
-            $xfer += $input->readListBegin($_etype94, $_size91);
-            for ($_i95 = 0; $_i95 < $_size91; ++$_i95)
+            $_size84 = 0;
+            $_etype87 = 0;
+            $xfer += $input->readListBegin($_etype87, $_size84);
+            for ($_i88 = 0; $_i88 < $_size84; ++$_i88)
             {
-              $elem96 = null;
-              $elem96 = new \Authority\Role();
-              $xfer += $elem96->read($input);
-              $this->roles []= $elem96;
+              $elem89 = null;
+              $elem89 = new \Authority\Role();
+              $xfer += $elem89->read($input);
+              $this->roles []= $elem89;
             }
             $xfer += $input->readListEnd();
           } else {
@@ -3186,17 +3078,22 @@ class RoleRet {
       $xfer += $output->writeI32($this->ret);
       $xfer += $output->writeFieldEnd();
     }
+    if ($this->total !== null) {
+      $xfer += $output->writeFieldBegin('total', TType::I32, 2);
+      $xfer += $output->writeI32($this->total);
+      $xfer += $output->writeFieldEnd();
+    }
     if ($this->roles !== null) {
       if (!is_array($this->roles)) {
         throw new TProtocolException('Bad type in structure.', TProtocolException::INVALID_DATA);
       }
-      $xfer += $output->writeFieldBegin('roles', TType::LST, 2);
+      $xfer += $output->writeFieldBegin('roles', TType::LST, 3);
       {
         $output->writeListBegin(TType::STRUCT, count($this->roles));
         {
-          foreach ($this->roles as $iter97)
+          foreach ($this->roles as $iter90)
           {
-            $xfer += $iter97->write($output);
+            $xfer += $iter90->write($output);
           }
         }
         $output->writeListEnd();

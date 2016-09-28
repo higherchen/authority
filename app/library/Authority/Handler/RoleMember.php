@@ -17,12 +17,7 @@ class RoleMemberHandler
         $ret = new CommonRet();
 
         try {
-            $data = [
-                'role_id' => $role_id,
-                'user_id' => $user_id,
-                'ctime' => date('Y-m-d H:i:s'),
-            ];
-            (new \RoleMember())->create()->set($data)->save();
+            (new \RoleMember())->add($role_id, $user_id);
             $ret->ret = \Constant::RET_OK;
         } catch (\Exception $e) {
             $ret->ret = \Constant::RET_DATA_CONFLICT;
@@ -43,12 +38,8 @@ class RoleMemberHandler
     {
         $ret = new CommonRet();
 
-        $item = (new \RoleMember())->where(['role_id' => $role_id, 'user_id' => $user_id])->find_one();
-        if ($item) {
-            $ret->ret = $item->delete() ? \Constant::RET_OK : \Constant::RET_SYS_ERROR;
-        } else {
-            $ret->ret = \Constant::RET_DATA_NO_FOUND;
-        }
+        $count = (new \RoleMember())->remove($role_id, $user_id);
+        $ret->ret = $count ? \Constant::RET_OK : \Constant::RET_DATA_NO_FOUND;
 
         return $ret;
     }

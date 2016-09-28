@@ -16,27 +16,16 @@ class PointHandler
     {
         $ret = new CommonRet;
 
-        $now = date('Y-m-d H:i:s');
-        $data = [
-            'name' => $point->name,
-            'type' => \Constant::POINT,
-            'data' => $point->data,
-            'rule_id' => $point->rule_id ? : null,
-            'description' => $point->description,
-            'ctime' => $now,
-            'mtime' => $now,
-        ];
-
-        $model = new \AuthItem();
-        try {
-            $model->create()->set($data)->save();
+        $id = (new \AuthItem())->add($point->name, \Constant::POINT, $point->rule_id, $point->description, $point->data);
+        if ($id) {
+            $ret->ret = \Constant::RET_OK;
+            $ret->data = json_encode(['id' => $id]);
             if ($cate_id) {
-                (new \AuthItemChild())->create()->set(['parent' => $cate_id, 'child' => $model->id()])->save();
-                $ret->ret = \Constant::RET_OK;
-                $ret->data = json_encode(['id' => $model->id()]);
+                (new \AuthItemChild())->add($cate_id, $id);
             }
-        } catch (\Exception $e) {
+        } else {
             $ret->ret = \Constant::RET_DATA_CONFLICT;
+            $ret->data = 'Point exists!';
         }
 
         return $ret;
@@ -54,20 +43,14 @@ class PointHandler
     {
         $ret = new CommonRet;
 
-        $model = (new \AuthItem())->where('type', \Constant::POINT)->find_one($point_id);
-        if ($model) {
-            $data = ['mtime' => date('Y-m-d H:i:s')];
-            if ($point->name) {
-                $data['name'] = $point->name;
-            }
-            if ($point->data) {
-                $data['data'] = $point->data;
-            }
-            if ($point->description) {
-                $data['description'] = $point->description;
-            }
+        $model = new \AuthItem();
+        $item = $model->getById($point_id);
+        if ($item['type'] == \Constant::POINT) {
+            $name = $point->name ? : $item['name'];
+            $data = $point->data ? : $item['data'];
+            $description = $point->description ? : $item['description'];
             try {
-                $model->set($data)->save();
+                $model->update($point_id, \Constant::POINT, $name, $description, $data);
                 $ret->ret = \Constant::RET_OK;
             } catch (\Exception $e) {
                 $ret->ret = \Constant::RET_DATA_CONFLICT;
@@ -90,13 +73,8 @@ class PointHandler
     {
         $ret = new CommonRet;
 
-        $item = (new \AuthItem())->where('type', \Constant::POINT)->find_one($id);
-        if ($item) {
-            $item->delete();
-            $ret->ret = \Constant::RET_OK;
-        } else {
-            $ret->ret = \Constant::RET_DATA_NO_FOUND;
-        }
+        $count = (new \AuthItem())->remove(\Constant::POINT, $point_id);
+        $ret->ret = $count ? \Constant::RET_OK : \Constant::RET_DATA_NO_FOUND;
 
         return $ret;
     }

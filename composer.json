@@ -1,8 +1,7 @@
 {
     "require": {
         "php": ">=5.3.10",
-        "higherchen/rpc": "dev-master",
-        "j4mie/idiorm": "^1.5"
+        "higherchen/rpc": "dev-master"
     },
     "autoload": {
         "classmap": [
