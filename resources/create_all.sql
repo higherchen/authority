@@ -65,7 +65,7 @@ CREATE TABLE `resource_attr` (
   `owner_id` int(11) NOT NULL DEFAULT 0 COMMENT '所有者ID',
   `role_id` int(11) NOT NULL DEFAULT 0 COMMENT '角色ID',
   `mode` char(3) NOT NULL COMMENT '权限按位分布',
-  `rule` text DEFAULT '' COMMENT '规则',
+  `rule` text COMMENT '规则',
   `ctime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT '创建时间',
   `mtime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT '修改时间',
   PRIMARY KEY (`id`),
