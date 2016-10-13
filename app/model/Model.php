@@ -14,6 +14,7 @@ class Model
     {
         $this->_database = $database;
         $this->connect();
+        $this->ping();
     }
 
     protected function connect()
@@ -34,27 +35,31 @@ class Model
         if (!isset($this->_prepared[$mark])) {
             $this->_prepared[$mark] = $this->prepare($sql);
         }
+
         return $this->_prepared[$mark];
     }
 
     public function __call($method, $arguments)
     {
         if ($this->_db && method_exists($this->_db, $method)) {
-            try {
-                return call_user_func_array([$this->_db, $method], $arguments);
-            } catch (Exception $e) {
-                if ($e->getCode() == 'HY000') {
-                    // 如果mysql gone away，自动重连
-                    $this->_db = null;
-                    $this->_prepared = [];
-                    $this->connect();
-                    return call_user_func_array([$this->_db, $method], $arguments);
-                }
-                throw new Exception($e->getMessage(), $e->getCode());
-            }
-        } else {
-            return false;
+            return call_user_func_array([$this->_db, $method], $arguments);
         }
+
+        return false;
     }
 
+    protected function ping()
+    {
+        try {
+            $this->_db->getAttribute(PDO::ATTR_SERVER_INFO);
+        } catch (Exception $e) {
+            if ($e->getCode() == 'HY000') {
+                $this->_db = null;
+                $this->_prepared = [];
+                $this->_db = $this->connect();
+            } else {
+                throw $e;
+            }
+        }
+    }
 }
