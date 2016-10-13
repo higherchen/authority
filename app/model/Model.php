@@ -56,7 +56,7 @@ class Model
             if ($e->getCode() == 'HY000') {
                 $this->_db = null;
                 $this->_prepared = [];
-                $this->_db = $this->connect();
+                $this->connect();
             } else {
                 throw $e;
             }
