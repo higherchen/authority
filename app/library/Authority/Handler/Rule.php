@@ -2,7 +2,7 @@
 
 namespace Authority;
 
-class RuleHandler
+class Rule
 {
     /**
      * 新增规则.
@@ -15,7 +15,7 @@ class RuleHandler
     {
         $ret = new CommonRet();
 
-        $id = (new \AuthRule())->add($rule->name, $rule->data ? : null);
+        $id = (new \AuthRule())->add($rule->name, $rule->data ?: null);
         $ret->ret = \Constant::RET_OK;
         $ret->data = json_encode(['id' => $id]);
 
@@ -34,7 +34,18 @@ class RuleHandler
         $ret = new CommonRet();
 
         $count = (new \AuthRule())->remove($rule_id);
-        $ret->ret = $count ? \Constant::RET_OK : \Constant::RET_DATA_NO_FOUND;
+        if ($count) {
+            /*** make some clean work ***/
+            $auth_item = new \AuthItem();
+            $ids = $auth_item->getIdsByRule($rule_id);
+            $auth_item->removeByRuleId($rule_id);                   // delete auth_item
+            (new \AuthItemChild())->removeMulti($ids, $ids, 'OR');  // delete auth_item_child
+            (new \AuthAssignment())->removeByItemIds($ids);         // delete auth_assignment
+
+            $ret->ret = \Constant::RET_OK;
+        } else {
+            $ret->ret = \Constant::RET_DATA_NO_FOUND;
+        }
 
         return $ret;
     }

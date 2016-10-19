@@ -2,7 +2,7 @@
 
 namespace Authority;
 
-class GroupHandler
+class Group
 {
     /**
      * 新增权限组、角色.
@@ -14,7 +14,7 @@ class GroupHandler
      */
     public static function add(Group $group, $parent)
     {
-        $ret = new CommonRet;
+        $ret = new CommonRet();
 
         $model = new \AuthItem();
         try {
@@ -41,13 +41,14 @@ class GroupHandler
      */
     public static function remove($group_id)
     {
-        $ret = new CommonRet;
+        $ret = new CommonRet();
 
         $model = new \AuthItem();
         $item = $model->getById($group_id);
         if ($item && in_array($item['type'], [\Constant::GROUP, \Constant::ORG])) {
             $count = $model->remove($item['type'], $group_id);
             if (!$count) {
+                (new \AuthItemChild())->remove($group_id, $group_id);   // delete auth_item_child
                 $ret->ret = \Constant::RET_DATA_NO_FOUND;
             } else {
                 $ret->ret = \Constant::RET_OK;
@@ -68,13 +69,13 @@ class GroupHandler
      */
     public static function update($group_id, Group $group)
     {
-        $ret = new CommonRet;
+        $ret = new CommonRet();
 
         $model = new \AuthItem();
         $item = $model->getById($group_id);
         if (in_array($item['type'], [\Constant::GROUP, \Constant::ORG])) {
-            $name = $group->name ? : $item['name'];
-            $description = $group->description ? : $item['description'];
+            $name = $group->name ?: $item['name'];
+            $description = $group->description ?: $item['description'];
             try {
                 $model->update($group_id, $item['type'], $name, $description);
                 $ret->ret = \Constant::RET_OK;
@@ -107,7 +108,7 @@ class GroupHandler
             // 获取组信息
             $item = $auth_item->getById($group_id);
             if ($item && in_array($item['type'], [\Constant::ORG, \Constant::GROUP])) {
-                $ret->group = new Group(
+                $ret->group = new self(
                     [
                         'id' => $item['id'],
                         'name' => $item['name'],
@@ -124,7 +125,7 @@ class GroupHandler
             if ($parent_ids) {
                 $parent = $auth_item->getById(current($parent_ids));
                 if ($parent && $parent['type'] == \Constant::ORG) {
-                    $ret->parent = new Group(
+                    $ret->parent = new self(
                         [
                             'id' => $parent['id'],
                             'name' => $parent['name'],

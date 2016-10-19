@@ -2,19 +2,17 @@
 
 class User extends Model
 {
-
-    const INSERT_SQL = 'INSERT INTO user (username,nickname,email,telephone,ctime,mtime) VALUES (?,?,?,?,?,?)';
+    const INSERT_SQL = 'INSERT INTO user (username,nickname,email,telephone) VALUES (?,?,?,?)';
     const GET_ALL_SQL = 'SELECT * FROM user ORDER BY id DESC';
     const GET_BY_ID_SQL = 'SELECT * FROM user WHERE id=?';
     const GET_BY_NAME_SQL = 'SELECT * FROM user WHERE username=?';
-    const UPDATE_SQL = 'UPDATE user SET nickname=?,email=?,telephone=?,mtime=? WHERE id=?';
+    const UPDATE_SQL = 'UPDATE user SET nickname=?,email=?,telephone=? WHERE id=?';
     const DELETE_BY_ID_SQL = 'DELETE FROM user WHERE id=?';
 
     public function add($username, $nickname, $email, $telephone)
     {
         $stmt = $this->getStatement(self::INSERT_SQL);
-        $now = date('Y-m-d H:i:s');
-        $stmt->execute([$username, $nickname, $email, $telephone, $now, $now]);
+        $stmt->execute([$username, $nickname, $email, $telephone]);
         $count = $stmt->rowCount();
 
         return $count ? $this->lastInsertId() : $count;
@@ -33,7 +31,7 @@ class User extends Model
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function getByName($username) 
+    public function getByName($username)
     {
         $stmt = $this->getStatement(self::GET_BY_NAME_SQL);
         $stmt->execute([$username]);
@@ -44,7 +42,7 @@ class User extends Model
     public function update($id, $nickname, $email, $telephone)
     {
         $stmt = $this->getStatement(self::UPDATE_SQL);
-        $stmt->execute([$nickname, $email, $telephone, date('Y-m-d H:i:s'), $id]);
+        $stmt->execute([$nickname, $email, $telephone, $id]);
 
         return $stmt->rowCount();
     }
@@ -57,9 +55,10 @@ class User extends Model
         return $stmt->rowCount();
     }
 
-    public function getMulti($ids) 
+    public function getMulti($ids)
     {
         $ids = implode(',', $ids);
+
         return $this->_db->query("SELECT * FROM user WHERE id IN ({$ids})")->fetchAll(PDO::FETCH_ASSOC);
     }
 }

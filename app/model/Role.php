@@ -2,11 +2,10 @@
 
 class Role extends Model
 {
-
     const GET_ALL_SQL = 'SELECT * FROM role ORDER BY id DESC';
     const GET_BY_ID_SQL = 'SELECT * FROM role WHERE id=?';
-    const INSERT_SQL = 'INSERT INTO role (type,name,rule,ctime,mtime) VALUES (?,?,?,?,?)';
-    const UPDATE_SQL = 'UPDATE role SET name=?,rule=?,mtime=? WHERE id=?';
+    const INSERT_SQL = 'INSERT INTO role (type,name,rule) VALUES (?,?,?)';
+    const UPDATE_SQL = 'UPDATE role SET name=?,rule=? WHERE id=?';
     const DELETE_BY_ID_SQL = 'DELETE FROM role WHERE id=?';
 
     public function getAll()
@@ -16,11 +15,10 @@ class Role extends Model
         return array_column($roles, null, 'id');
     }
 
-    public function add($type, $name, $rule) 
+    public function add($type, $name, $rule)
     {
         $stmt = $this->getStatement(self::INSERT_SQL);
-        $now = date('Y-m-d H:i:s');
-        $stmt->execute([$type, $name, $rule, $now, $now]);
+        $stmt->execute([$type, $name, $rule]);
 
         return $this->lastInsertId();
     }
@@ -28,7 +26,7 @@ class Role extends Model
     public function update($id, $name, $rule = '')
     {
         $stmt = $this->getStatement(self::UPDATE_SQL);
-        $stmt->execute([$name, $rule, date('Y-m-d H:i:s'), $id]);
+        $stmt->execute([$name, $rule, $id]);
 
         return true;
     }
@@ -47,6 +45,5 @@ class Role extends Model
         $stmt->execute([$id]);
 
         return $stmt->rowCount();
-
     }
 }

@@ -2,12 +2,12 @@
 
 class AuthAssignment extends Model
 {
-
     const GET_ALL_SQL = 'SELECT * FROM auth_assignment ORDER BY user_id DESC';
     const GET_BY_USER_ID_SQL = 'SELECT item_id FROM auth_assignment WHERE user_id=?';
     const GET_BY_ITEM_ID_SQL = 'SELECT user_id FROM auth_assignment WHERE item_id=?';
-    const INSERT_SQL = 'INSERT INTO auth_assignment (user_id,item_id,ctime) VALUES (?,?,?)';
+    const INSERT_SQL = 'INSERT INTO auth_assignment (user_id,item_id) VALUES (?,?)';
     const DELETE_BY_USER_ID = 'DELETE FROM auth_assignment WHERE user_id=?';
+    const DELETE_BY_ITEM_ID = 'DELETE FROM auth_assignment WHERE item_id=?';
 
     // fetch data
     public function getAll()
@@ -17,10 +17,9 @@ class AuthAssignment extends Model
 
     public function addMulti($user_id, $item_ids)
     {
-        $now = date('Y-m-d H:i:s');
         $stmt = $this->getStatement(self::INSERT_SQL);
         foreach ($item_ids as $item_id) {
-            $stmt->execute([$user_id, $item_id, $now]);
+            $stmt->execute([$user_id, $item_id]);
         }
 
         return true;
@@ -39,12 +38,26 @@ class AuthAssignment extends Model
         return true;
     }
 
-    public function removeByUserId($user_id) 
+    public function removeByUserId($user_id)
     {
         $stmt = $this->getStatement(self::DELETE_BY_USER_ID);
         $stmt->execute([$user_id]);
 
         return $stmt->rowCount();
+    }
+
+    public function removeByItemIds($item_ids)
+    {
+        if (is_array($item_ids)) {
+            $item_ids = implode(',', $item_ids);
+
+            return $this->_db->exec("DELETE FROM auth_assignment WHERE item_id IN ({$item_ids})");
+        } else {
+            $stmt = $this->getStatement(self::DELETE_BY_ITEM_ID);
+            $stmt->execute([$item_ids]);
+
+            return $stmt->rowCount();
+        }
     }
 
     public function getItemIdsByUserId($user_id)
@@ -63,7 +76,7 @@ class AuthAssignment extends Model
         return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
 
-    public function getUserIdsByItemIds($item_ids) 
+    public function getUserIdsByItemIds($item_ids)
     {
         $item_ids = implode(',', $item_ids);
 

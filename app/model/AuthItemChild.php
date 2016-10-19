@@ -2,7 +2,6 @@
 
 class AuthItemChild extends Model
 {
-
     const GET_ALL_SQL = 'SELECT * FROM auth_item_child';
     const GET_BY_PARENT_SQL = 'SELECT child FROM auth_item_child WHERE parent=?';
     const GET_BY_CHILD_SQL = 'SELECT parent FROM auth_item_child WHERE child=?';
@@ -13,7 +12,7 @@ class AuthItemChild extends Model
         return $this->_db->query(self::GET_ALL_SQL)->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function getRelations() 
+    public function getRelations()
     {
         $all = $this->getAll();
         $parents = $children = [];
@@ -27,6 +26,7 @@ class AuthItemChild extends Model
             }
             $children[$item['child']][] = $item['parent'];
         }
+
         return ['parents' => $parents, 'children' => $children];
     }
 
@@ -60,7 +60,7 @@ class AuthItemChild extends Model
         return true;
     }
 
-    public function remove($parent = '', $child = '')
+    public function remove($parent = '', $child = '', $expr = 'AND')
     {
         $where = [];
         if ($parent) {
@@ -69,19 +69,21 @@ class AuthItemChild extends Model
         if ($child) {
             $where[] = "child={$child}";
         }
-        if ($where) {
-            $where = implode(' AND ', $where);
-            return $this->_db->exec("DELETE FROM auth_item_child WHERE {$where}");
-        }
 
-        return false;
+        return $where ? $this->_db->exec('DELETE FROM auth_item_child WHERE '.implode(" {$expr} ", $where)) : false;
     }
 
-    public function removeMulti($parents, $children) 
+    public function removeMulti($parents, $children, $expr = 'AND')
     {
-        $parents = implode(',', $parents);
-        $children = implode(',', $children);
-        return $this->_db->exec("DELETE FROM auth_item_child WHERE parent IN ({$parents}) AND child IN ({$children})");
+        $where = [];
+        if ($parents) {
+            $where[] = 'parent IN ('.implode(',', $parents).')';
+        }
+        if ($children) {
+            $where[] = 'child IN ('.implode(',', $children).')';
+        }
+
+        return $where ? $this->_db->exec('DELETE FROM auth_item_child WHERE '.implode(" {$expr} ", $where)) : false;
     }
 
     public function updateRelation($role_id, $item_ids)

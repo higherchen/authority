@@ -2,7 +2,7 @@
 
 namespace Authority;
 
-class PointHandler
+class Point
 {
     /**
      * 新增权限点.
@@ -14,7 +14,7 @@ class PointHandler
      */
     public static function add(Point $point, $cate_id)
     {
-        $ret = new CommonRet;
+        $ret = new CommonRet();
 
         $id = (new \AuthItem())->add($point->name, \Constant::POINT, $point->rule_id, $point->description, $point->data);
         if ($id) {
@@ -41,14 +41,14 @@ class PointHandler
      */
     public static function update($point_id, Point $point)
     {
-        $ret = new CommonRet;
+        $ret = new CommonRet();
 
         $model = new \AuthItem();
         $item = $model->getById($point_id);
         if ($item['type'] == \Constant::POINT) {
-            $name = $point->name ? : $item['name'];
-            $data = $point->data ? : $item['data'];
-            $description = $point->description ? : $item['description'];
+            $name = $point->name ?: $item['name'];
+            $data = $point->data ?: $item['data'];
+            $description = $point->description ?: $item['description'];
             try {
                 $model->update($point_id, \Constant::POINT, $name, $description, $data);
                 $ret->ret = \Constant::RET_OK;
@@ -71,10 +71,15 @@ class PointHandler
      */
     public static function remove($point_id)
     {
-        $ret = new CommonRet;
+        $ret = new CommonRet();
 
         $count = (new \AuthItem())->remove(\Constant::POINT, $point_id);
-        $ret->ret = $count ? \Constant::RET_OK : \Constant::RET_DATA_NO_FOUND;
+        if ($count) {
+            (new \AuthItemChild())->remove(null, $point_id);    // delete auth_item_child
+            $ret->ret = \Constant::RET_OK;
+        } else {
+            $ret->ret = \Constant::RET_DATA_NO_FOUND;
+        }
 
         return $ret;
     }

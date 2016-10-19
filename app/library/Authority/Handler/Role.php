@@ -2,7 +2,7 @@
 
 namespace Authority;
 
-class RoleHandler
+class Role
 {
     /**
      * 新增角色.
@@ -16,7 +16,7 @@ class RoleHandler
         $ret = new CommonRet();
 
         try {
-            $id = (new \Role())->add($role->type, $role->name, $role->rule ? : '');
+            $id = (new \Role())->add($role->type, $role->name, $role->rule ?: '');
             $ret->ret = \Constant::RET_OK;
             $ret->data = json_encode(['id' => $id]);
         } catch (\Exception $e) {
@@ -39,7 +39,12 @@ class RoleHandler
         $ret = new CommonRet();
 
         $count = (new \Role())->remove($role_id);
-        $ret->ret = $count ? \Constant::RET_OK : \Constant::RET_DATA_NO_FOUND;
+        if ($count) {
+            (new \RoleMember())->removeByRole($role_id); // delete role_member
+            $ret->ret = \Constant::RET_OK;
+        } else {
+            $ret->ret = \Constant::RET_DATA_NO_FOUND;
+        }
 
         return $ret;
     }
@@ -59,8 +64,8 @@ class RoleHandler
         $model = new \Role();
         $item = $model->getById($role_id);
         if ($item) {
-            $name = $role->name ? : $item['name'];
-            $rule = $role->rule ? : $item['rule'];
+            $name = $role->name ?: $item['name'];
+            $rule = $role->rule ?: $item['rule'];
             $model->update($role_id, $name, $rule);
             $ret->ret = \Constant::RET_OK;
         } else {
@@ -68,7 +73,6 @@ class RoleHandler
         }
 
         return $ret;
-
     }
 
     /**
@@ -97,7 +101,7 @@ class RoleHandler
             if ($search->conditions) {
                 $where = [];
                 foreach ($search->conditions as $condition) {
-                    $expr = $condition->expr ? : '=';
+                    $expr = $condition->expr ?: '=';
                     $where[] = "{$condition->field} {$expr} '{$condition->value}'";
                 }
                 $where = implode(' AND ', $where);
@@ -107,7 +111,7 @@ class RoleHandler
             $ret->total = $model->query($total_sql)->fetch(\PDO::FETCH_COLUMN);
             $sql .= ' ORDER BY id DESC';
             if ($page = $search->page) {
-                $pagesize = $search->pagesize ? : 20;
+                $pagesize = $search->pagesize ?: 20;
                 $offset = ($page - 1) * $pagesize;
                 $sql .= " LIMIT {$offset},{$pagesize}";
             }
@@ -117,7 +121,7 @@ class RoleHandler
         if ($roles) {
             $data = [];
             foreach ($roles as $role) {
-                $data[] = new Role(
+                $data[] = new self(
                     [
                         'id' => $role['id'],
                         'type' => $role['type'],
