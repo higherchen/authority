@@ -2,7 +2,7 @@
 
 namespace Authority;
 
-class Group
+class GroupHandler
 {
     /**
      * 新增权限组、角色.
@@ -108,7 +108,7 @@ class Group
             // 获取组信息
             $item = $auth_item->getById($group_id);
             if ($item && in_array($item['type'], [\Constant::ORG, \Constant::GROUP])) {
-                $ret->group = new self(
+                $ret->group = new Group(
                     [
                         'id' => $item['id'],
                         'name' => $item['name'],
@@ -125,7 +125,7 @@ class Group
             if ($parent_ids) {
                 $parent = $auth_item->getById(current($parent_ids));
                 if ($parent && $parent['type'] == \Constant::ORG) {
-                    $ret->parent = new self(
+                    $ret->parent = new Group(
                         [
                             'id' => $parent['id'],
                             'name' => $parent['name'],

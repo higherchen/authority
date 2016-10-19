@@ -2,7 +2,7 @@
 
 namespace Authority;
 
-class Point
+class PointHandler
 {
     /**
      * 新增权限点.

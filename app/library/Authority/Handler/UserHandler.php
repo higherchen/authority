@@ -241,7 +241,7 @@ class UserHandler
             $ret->points = $points;
         }
 
-        return $ret; 
+        return $ret;
     }
 
     /**
@@ -322,5 +322,4 @@ class UserHandler
         
         return $auth_assignment->updateMulti($user_id, $added, $deleted);
     }
-
 }

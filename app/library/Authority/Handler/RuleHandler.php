@@ -2,7 +2,7 @@
 
 namespace Authority;
 
-class Rule
+class RuleHandler
 {
     /**
      * 新增规则.

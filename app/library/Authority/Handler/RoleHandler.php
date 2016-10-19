@@ -2,7 +2,7 @@
 
 namespace Authority;
 
-class Role
+class RoleHandler
 {
     /**
      * 新增角色.
@@ -121,7 +121,7 @@ class Role
         if ($roles) {
             $data = [];
             foreach ($roles as $role) {
-                $data[] = new self(
+                $data[] = new Role(
                     [
                         'id' => $role['id'],
                         'type' => $role['type'],

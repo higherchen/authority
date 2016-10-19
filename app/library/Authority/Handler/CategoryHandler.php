@@ -2,7 +2,7 @@
 
 namespace Authority;
 
-class Category
+class CategoryHandler
 {
     /**
      * 新增权限点分类.
@@ -119,7 +119,7 @@ class Category
         if ($categories) {
             $data = [];
             foreach ($categories as $cate) {
-                $data[] = new self(
+                $data[] = new Category(
                     [
                         'id' => $cate['id'],
                         'name' => $cate['name'],
