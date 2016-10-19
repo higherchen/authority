@@ -29,7 +29,7 @@ CREATE TABLE `auth_item` (
   `ctime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `mtime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后修改时间',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_auth_item` (`rule_id`,`name`,`type`),
+  UNIQUE KEY `uk_auth_item` (`rule_id`,`name`,`type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='储存权限和角色的表';
 
 CREATE TABLE `auth_item_child` (
@@ -57,8 +57,7 @@ CREATE TABLE `resource_attr` (
   `rule` varchar(64) NOT NULL DEFAULT '' COMMENT '规则',
   `ctime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `mtime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后修改时间',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_name` (`name`,`src_id`)
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='资源标识';
 
 CREATE TABLE `role` (
