@@ -12,20 +12,20 @@ CREATE TABLE `user` (
 
 CREATE TABLE `auth_rule` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增ID',
-  `name` varchar(16) NOT NULL COMMENT '规则',
-  `data` varchar(64),
+  `name` varchar(16) NOT NULL COMMENT '规则名',
+  `data` varchar(64) NOT NULL DEFAULT '' COMMENT '内容',
   `ctime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `mtime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后修改时间',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='存储规则的表。规则是给角色和权限添加额外的约束，在代码层面实现具体规则';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='存储规则的表';
 
 CREATE TABLE `auth_item` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增ID',
   `name` varchar(16) NOT NULL COMMENT '权限、角色名称',
   `type` tinyint(4) NOT NULL COMMENT '区分权限和角色',
-  `description` varchar(32),
+  `description` varchar(32) NOT NULL DEFAULT '' COMMENT '描述',
   `rule_id` int(11) NOT NULL DEFAULT 0 COMMENT '如果存在规则，关联到规则表',
-  `data` varchar(64),
+  `data` varchar(64) NOT NULL DEFAULT '' COMMENT '内容',
   `ctime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `mtime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后修改时间',
   PRIMARY KEY (`id`),
@@ -34,8 +34,8 @@ CREATE TABLE `auth_item` (
 
 CREATE TABLE `auth_item_child` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增ID',
-  `parent` int(11) NOT NULL COMMENT 'auth_item id',
-  `child` int(11) NOT NULL COMMENT 'auth_item id',
+  `parent` int(11) NOT NULL COMMENT '父级',
+  `child` int(11) NOT NULL COMMENT '子级',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='角色和权限(或角色和角色)的关联表';
 

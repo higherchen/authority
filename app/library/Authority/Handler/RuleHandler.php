@@ -15,7 +15,7 @@ class RuleHandler
     {
         $ret = new CommonRet();
 
-        $id = (new \AuthRule())->add($rule->name, $rule->data ?: null);
+        $id = (new \AuthRule())->add($rule->name, $rule->data ?: '');
         $ret->ret = \Constant::RET_OK;
         $ret->data = json_encode(['id' => $id]);
 
