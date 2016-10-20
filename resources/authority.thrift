@@ -2,159 +2,159 @@ namespace php Authority
 
 struct Search
 {
-    1:optional i32                  page
-    2:optional i32                  pagesize
-    3:optional list<Condition>      conditions
+    1:i32                  page
+    2:i32                  pagesize
+    3:list<Condition>      conditions
 }
 
 struct Condition
 {
-    1:required string               field
-    2:optional string               expr
-    3:required string               value
+    1:string               field
+    2:string               expr
+    3:string               value
 }
 
 struct User
 {
-    1:optional i32                  id
-    2:required string               username
-    3:optional string               nickname
-    4:optional string               password
-    5:optional string               email
-    6:optional string               telephone
+    1:i32                  id
+    2:string               username
+    3:string               nickname
+    4:string               password
+    5:string               email
+    6:string               telephone
 }
 
 struct CommonRet
 {
-    1:required i32                  ret
-    2:optional string               data
+    1:i32                  ret
+    2:string               data
 }
 
 struct Rule
 {
-    1:optional i32                  id
-    2:required string               name
-    3:optional string               data
+    1:i32                  id
+    2:string               name
+    3:string               data
 }
 
 // 功能权限
 
 struct Group
 {
-    1:optional i32                  id
-    2:required i32                  type
-    3:required string               name
-    4:optional i32                  rule_id
-    5:optional string               description
+    1:i32                  id
+    2:i32                  type
+    3:string               name
+    4:i32                  rule_id
+    5:string               description
 }
 
 struct Point
 {
-    1:optional i32                  id
-    2:required string               name
-    3:required string               data
-    4:optional i32                  rule_id
-    5:optional string               description
+    1:i32                  id
+    2:string               name
+    3:string               data
+    4:i32                  rule_id
+    5:string               description
 }
 
 struct Category
 {
-    1:optional i32                  id
-    2:required string               name
-    3:optional i32                  rule_id
-    4:optional string               description
+    1:i32                  id
+    2:string               name
+    3:i32                  rule_id
+    4:string               description
 }
 
 struct CategoryPoint
 {
-    1:i32                           id
-    2:string                        name
-    3:list<Point>                   children
-    4:optional string               description
+    1:i32                  id
+    2:string               name
+    3:list<Point>          children
+    4:string               description
 }
 
 struct UserRet
 {
-    1:required i32                  ret
-    2:required i32                  total
-    3:optional list<User>           users
+    1:i32                  ret
+    2:i32                  total
+    3:list<User>           users
 }
 
 struct UserRlatRet
 {
-    1:required i32                  ret
-    2:optional User                 user
-    3:optional list<string>         super_points
-    4:optional list<string>         points
-    5:optional list<Group>          groups
+    1:i32                  ret
+    2:User                 user
+    3:list<string>         super_points
+    4:list<string>         points
+    5:list<Group>          groups
 }
 
 struct AssignableGroupRet
 {
-    1:required i32                  ret
-    2:optional list<Group>          groups
+    1:i32                  ret
+    2:list<Group>          groups
 }
 
 struct CategoryRet
 {
-    1:required i32                  ret
-    2:required i32                  total
-    3:optional list<Category>       categories
+    1:i32                  ret
+    2:i32                  total
+    3:list<Category>       categories
 }
 
 struct GroupRlatRet
 {
-    1:required i32                  ret
-    2:optional Group                group
-    3:optional Group                parent
-    4:optional list<string>         users
-    5:optional list<i32>            points
+    1:i32                  ret
+    2:Group                group
+    3:Group                parent
+    4:list<string>         users
+    5:list<i32>            points
 }
 
 struct AssignablePointRet
 {
-    1:required i32                  ret
-    2:optional list<CategoryPoint>  points
+    1:i32                  ret
+    2:list<CategoryPoint>  points
 }
 
 // 资源权限
 
 struct ResourceAttr                             // 资源权限属性
 {
-    1:optional i32                  id
-    2:required string               name
-    3:required i32                  src_id
-    4:optional i32                  owner_id
-    5:optional i32                  role_id
-    6:optional string               mode
+    1:i32                  id
+    2:string               name
+    3:i32                  src_id
+    4:i32                  owner_id
+    5:i32                  role_id
+    6:string               mode
 }
 
 struct Role                                     // 角色
 {
-    1:optional i32                  id
-    2:required i32                  type
-    3:required string               name
+    1:i32                  id
+    2:i32                  type
+    3:string               name
 }
 
 struct RoleMember                               // 角色成员
 {
-    1:optional i32                  id
-    2:required i32                  role_id
-    3:required i32                  user_id
+    1:i32                  id
+    2:i32                  role_id
+    3:i32                  user_id
 }
 
 struct ResourceAttrRet                          // 资源权限列表
 {
-    1:required i32                  ret
-    2:required i32                  total
-    3:optional list<ResourceAttr>   resource_attrs
+    1:i32                  ret
+    2:i32                  total
+    3:list<ResourceAttr>   resource_attrs
 }
 
 struct RoleRet                                  // 返回角色列表
 {
-    1:required i32                  ret
-    2:required i32                  total
-    3:optional list<Role>           roles
+    1:i32                  ret
+    2:i32                  total
+    3:list<Role>           roles
 }
 
 service AuthorityService
