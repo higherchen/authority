@@ -1,5 +1,7 @@
 <?php
 
+use Swoole\Core\Logger;
+
 class AuthItem extends Model
 {
     const GET_ALL_SQL = 'SELECT * FROM auth_item';
@@ -28,31 +30,6 @@ class AuthItem extends Model
         return array_column($items, null, 'id');
     }
 
-    public function getIdsByRule($rule_id)
-    {
-        $stmt = $this->getStatement(self::GET_ID_BY_RULE_SQL);
-        $stmt->execute([$rule_id]);
-
-        return $stmt->fetchAll(PDO::FETCH_COLUMN);
-    }
-
-    public function add($name, $type, $rule_id = null, $description = '', $data = '')
-    {
-        $stmt = $this->getStatement(self::INSERT_SQL);
-        $stmt->execute([$name, $type, $rule_id, $description, $data]);
-        $count = $stmt->rowCount();
-
-        return $count ? $this->lastInsertId() : $count;
-    }
-
-    public function update($item_id, $type, $name, $description, $data = '')
-    {
-        $stmt = $this->getStatement(self::UPDATE_SQL);
-        $stmt->execute([$name, $description, $data, $type, $item_id]);
-
-        return $stmt->rowCount();
-    }
-
     public function getById($id)
     {
         $stmt = $this->getStatement(self::GET_BY_ID_SQL);
@@ -61,12 +38,45 @@ class AuthItem extends Model
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    public function getIdsByRule($rule_id)
+    {
+        $stmt = $this->getStatement(self::GET_ID_BY_RULE_SQL);
+        $stmt->execute([$rule_id]);
+
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    }
+
     public function getByName($name)
     {
         $stmt = $this->getStatement(self::GET_BY_NAME_SQL);
         $stmt->execute([$name]);
 
         return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function add($name, $type, $rule_id = 0, $description = '', $data = '')
+    {
+        $stmt = $this->getStatement(self::INSERT_SQL);
+        $stmt->execute([$name, $type, $rule_id, $description, $data]);
+        $count = $stmt->rowCount();
+        $error = $stmt->errorInfo();
+        if ($error[0] != '00000') {
+            Logger::write(date('Y-m-d H:i:s')." AuthItem::add error({$error[0]}): {$error[2]}".PHP_EOL);
+        }
+
+        return $count ? $this->lastInsertId() : $count;
+    }
+
+    public function update($item_id, $type, $name, $description, $data = '')
+    {
+        $stmt = $this->getStatement(self::UPDATE_SQL);
+        $stmt->execute([$name, $description, $data, $type, $item_id]);
+        $error = $stmt->errorInfo();
+        if ($error[0] != '00000') {
+            Logger::write(date('Y-m-d H:i:s')." AuthItem::update error({$error[0]}): {$error[2]}".PHP_EOL);
+        }
+
+        return $stmt->rowCount();
     }
 
     public function remove($type, $id)

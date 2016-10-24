@@ -15,7 +15,7 @@ class CategoryHandler
     {
         $ret = new CommonRet();
 
-        $id = (new \AuthItem())->add($category->name, \Constant::CATEGORY, $category->rule_id, $category->description);
+        $id = (new \AuthItem())->add($category->name, \Constant::CATEGORY, $category->rule_id ? : 0, $category->description);
         if ($id) {
             $ret->ret = \Constant::RET_OK;
             $ret->data = json_encode(['id' => $id]);

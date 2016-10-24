@@ -18,7 +18,7 @@ class GroupHandler
 
         $model = new \AuthItem();
         try {
-            $id = $model->add($group->name, $group->type, $group->rule_id, $group->description, '');
+            $id = $model->add($group->name, $group->type, $group->rule_id ? : 0, $group->description, '');
             $ret->ret = \Constant::RET_OK;
             $ret->data = json_encode(['id' => $id]);
 

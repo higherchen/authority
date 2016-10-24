@@ -10,8 +10,12 @@ class RoleMember extends Model
     {
         $stmt = $this->getStatement(self::INSERT_SQL);
         $stmt->execute([$role_id, $user_id]);
+        $error = $stmt->errorInfo();
+        if ($error[0] != '00000') {
+            Logger::write(date('Y-m-d H:i:s')." RoleMember::add error({$error[0]}): {$error[2]}".PHP_EOL);
+        }
 
-        return $this->lastInsertId();
+        return $this->rowCount();
     }
 
     public function remove($role_id, $user_id)

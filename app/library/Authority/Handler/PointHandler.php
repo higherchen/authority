@@ -16,7 +16,7 @@ class PointHandler
     {
         $ret = new CommonRet();
 
-        $id = (new \AuthItem())->add($point->name, \Constant::POINT, $point->rule_id, $point->description, $point->data);
+        $id = (new \AuthItem())->add($point->name, \Constant::POINT, $point->rule_id ? : 0, $point->description, $point->data);
         if ($id) {
             $ret->ret = \Constant::RET_OK;
             $ret->data = json_encode(['id' => $id]);

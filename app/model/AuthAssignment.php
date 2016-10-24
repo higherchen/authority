@@ -1,28 +1,29 @@
 <?php
 
+use Swoole\Core\Logger;
+
 class AuthAssignment extends Model
 {
-    const GET_ALL_SQL = 'SELECT * FROM auth_assignment ORDER BY user_id DESC';
-    const GET_BY_USER_ID_SQL = 'SELECT item_id FROM auth_assignment WHERE user_id=?';
     const GET_BY_ITEM_ID_SQL = 'SELECT user_id FROM auth_assignment WHERE item_id=?';
+    const GET_BY_USER_ID_SQL = 'SELECT item_id FROM auth_assignment WHERE user_id=?';
     const INSERT_SQL = 'INSERT INTO auth_assignment (user_id,item_id) VALUES (?,?)';
     const DELETE_BY_USER_ID = 'DELETE FROM auth_assignment WHERE user_id=?';
     const DELETE_BY_ITEM_ID = 'DELETE FROM auth_assignment WHERE item_id=?';
 
-    // fetch data
-    public function getAll()
+    public function getUserIdsByItemId($item_id)
     {
-        return $this->_db->query(self::GET_ALL_SQL)->fetchAll(PDO::FETCH_ASSOC);
+        $stmt = $this->getStatement(self::GET_BY_ITEM_ID_SQL);
+        $stmt->execute([$item_id]);
+
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
 
-    public function addMulti($user_id, $item_ids)
+    public function getItemIdsByUserId($user_id)
     {
-        $stmt = $this->getStatement(self::INSERT_SQL);
-        foreach ($item_ids as $item_id) {
-            $stmt->execute([$user_id, $item_id]);
-        }
+        $stmt = $this->getStatement(self::GET_BY_USER_ID_SQL);
+        $stmt->execute([$user_id]);
 
-        return true;
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
 
     public function updateMulti($user_id, $item_ids, $remove_ids)
@@ -32,7 +33,14 @@ class AuthAssignment extends Model
             $this->_db->exec("DELETE FROM auth_assignment WHERE user_id={$user_id} AND item_id IN ({$remove_ids})");
         }
         if ($item_ids) {
-            $this->addMulti($user_id, $item_ids);
+            $stmt = $this->getStatement(self::INSERT_SQL);
+            foreach ($item_ids as $item_id) {
+                $stmt->execute([$user_id, $item_id]);
+                $error = $stmt->errorInfo();
+                if ($error[0] != '00000') {
+                    Logger::write(date('Y-m-d H:i:s')." AuthAssignment::updateMulti error({$error[0]}): {$error[2]}".PHP_EOL);
+                }
+            }
         }
 
         return true;
@@ -58,28 +66,5 @@ class AuthAssignment extends Model
 
             return $stmt->rowCount();
         }
-    }
-
-    public function getItemIdsByUserId($user_id)
-    {
-        $stmt = $this->getStatement(self::GET_BY_USER_ID_SQL);
-        $stmt->execute([$user_id]);
-
-        return $stmt->fetchAll(PDO::FETCH_COLUMN);
-    }
-
-    public function getUserIdsByItemId($item_id)
-    {
-        $stmt = $this->getStatement(self::GET_BY_ITEM_ID_SQL);
-        $stmt->execute([$item_id]);
-
-        return $stmt->fetchAll(PDO::FETCH_COLUMN);
-    }
-
-    public function getUserIdsByItemIds($item_ids)
-    {
-        $item_ids = implode(',', $item_ids);
-
-        return $this->_db->query("SELECT user_id FROM auth_assignment WHERE item_id IN ({$item_ids})")->fetchAll(PDO::FETCH_COLUMN);
     }
 }

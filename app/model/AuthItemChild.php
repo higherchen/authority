@@ -1,5 +1,7 @@
 <?php
 
+use Swoole\Core\Logger;
+
 class AuthItemChild extends Model
 {
     const GET_ALL_SQL = 'SELECT * FROM auth_item_child';
@@ -52,9 +54,17 @@ class AuthItemChild extends Model
         if (is_array($child)) {
             foreach ($child as $item) {
                 $stmt->execute([$parent, $item]);
+                $error = $stmt->errorInfo();
+                if ($error[0] != '00000') {
+                    Logger::write(date('Y-m-d H:i:s')." AuthItemChild::add error({$error[0]}): {$error[2]}".PHP_EOL);
+                }
             }
         } else {
             $stmt->execute([$parent, $child]);
+            $error = $stmt->errorInfo();
+            if ($error[0] != '00000') {
+                Logger::write(date('Y-m-d H:i:s')." AuthItemChild::add error({$error[0]}): {$error[2]}".PHP_EOL);
+            }
         }
 
         return true;
@@ -84,13 +94,5 @@ class AuthItemChild extends Model
         }
 
         return $where ? $this->_db->exec('DELETE FROM auth_item_child WHERE '.implode(" {$expr} ", $where)) : false;
-    }
-
-    public function updateRelation($role_id, $item_ids)
-    {
-        $this->remove($role_id);
-        $this->add($role_id, $item_ids);
-
-        return true;
     }
 }
