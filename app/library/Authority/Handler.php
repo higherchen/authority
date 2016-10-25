@@ -21,6 +21,31 @@ class Handler implements AuthorityServiceIf
     }
 
     /**
+     * 根据名称获取规则.
+     *
+     * @param string $name
+     *
+     * @return \Authority\Rule $rule
+     */
+    public function getRuleByName($name)
+    {
+        return RuleHandler::getByName($name);
+    }
+
+    /**
+     * 编辑规则.
+     *
+     * @param int             $rule_id
+     * @param \Authority\Rule $rule
+     *
+     * @return \Authority\CommonRet $ret
+     */
+    public function updateRule($rule, Rule $rule)
+    {
+        return RuleHandler::update($rule, $rule);
+    }
+
+    /**
      * 删除规则.
      *
      * @param int $rule_id

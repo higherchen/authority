@@ -4,7 +4,7 @@ use Swoole\Core\Logger;
 
 class AuthItemChild extends Model
 {
-    const GET_ALL_SQL = 'SELECT * FROM auth_item_child';
+    const GET_ALL_SQL = 'SELECT parent,child FROM auth_item_child';
     const GET_BY_PARENT_SQL = 'SELECT child FROM auth_item_child WHERE parent=?';
     const GET_BY_CHILD_SQL = 'SELECT parent FROM auth_item_child WHERE child=?';
     const INSERT_SQL = 'INSERT INTO auth_item_child (parent,child) VALUES (?,?)';
@@ -51,6 +51,7 @@ class AuthItemChild extends Model
     public function add($parent, $child)
     {
         $stmt = $this->getStatement(self::INSERT_SQL);
+        $count = 0;
         if (is_array($child)) {
             foreach ($child as $item) {
                 $stmt->execute([$parent, $item]);
@@ -58,6 +59,7 @@ class AuthItemChild extends Model
                 if ($error[0] != '00000') {
                     Logger::write(date('Y-m-d H:i:s')." AuthItemChild::add error({$error[0]}): {$error[2]}".PHP_EOL);
                 }
+                $count += $stmt->rowCount();
             }
         } else {
             $stmt->execute([$parent, $child]);
@@ -65,9 +67,10 @@ class AuthItemChild extends Model
             if ($error[0] != '00000') {
                 Logger::write(date('Y-m-d H:i:s')." AuthItemChild::add error({$error[0]}): {$error[2]}".PHP_EOL);
             }
+            $count = $stmt->rowCount();
         }
 
-        return true;
+        return $count;
     }
 
     public function remove($parent = '', $child = '', $expr = 'AND')

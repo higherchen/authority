@@ -16,7 +16,8 @@ CREATE TABLE `auth_rule` (
   `data` varchar(64) NOT NULL DEFAULT '' COMMENT '内容',
   `ctime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `mtime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后修改时间',
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='存储规则的表';
 
 CREATE TABLE `auth_item` (

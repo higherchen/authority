@@ -15,7 +15,7 @@ class CategoryHandler
     {
         $ret = new CommonRet();
 
-        $id = (new \AuthItem())->add($category->name, \Constant::CATEGORY, $category->rule_id ? : 0, $category->description);
+        $id = (new \AuthItem())->add($category->name, \Constant::CATEGORY, $category->rule_id ?: 0, $category->description ?: '');
         if ($id) {
             $ret->ret = \Constant::RET_OK;
             $ret->data = json_encode(['id' => $id]);
@@ -95,7 +95,7 @@ class CategoryHandler
             $categories = (new \AuthItem())->getByType(\Constant::CATEGORY);
             $ret->total = count($items);
         } else {
-            $sql = 'SELECT * FROM auth_item WHERE type='.\Constant::CATEGORY;
+            $sql = 'SELECT id,name,description,rule_id FROM auth_item WHERE type='.\Constant::CATEGORY;
             $total_sql = 'SELECT COUNT(1) FROM auth_item WHERE type='.\Constant::CATEGORY;
             if ($search->conditions) {
                 $where = [];

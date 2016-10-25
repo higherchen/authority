@@ -2,7 +2,7 @@
 
 class Role extends Model
 {
-    const GET_ALL_SQL = 'SELECT * FROM role ORDER BY id DESC';
+    const GET_ALL_SQL = 'SELECT id,type,name,description,rule_id,data FROM role ORDER BY id DESC';
     const GET_BY_ID_SQL = 'SELECT * FROM role WHERE id=?';
     const INSERT_SQL = 'INSERT INTO role (type,name,description,rule_id,data) VALUES (?,?,?,?,?)';
     const UPDATE_SQL = 'UPDATE role SET name=?,description=?,data=? WHERE id=?';
@@ -27,16 +27,25 @@ class Role extends Model
     {
         $stmt = $this->getStatement(self::INSERT_SQL);
         $stmt->execute([$type, $name, $description, $rule_id, $data]);
+        $count = $stmt->rowCount();
+        $error = $stmt->errorInfo();
+        if ($error[0] != '00000') {
+            Logger::write(date('Y-m-d H:i:s')." Role::add error({$error[0]}): {$error[2]}".PHP_EOL);
+        }
 
-        return $this->lastInsertId();
+        return $count ? $this->lastInsertId() : $count;
     }
 
     public function update($id, $name, $description = '', $data = '')
     {
         $stmt = $this->getStatement(self::UPDATE_SQL);
         $stmt->execute([$name, $description, $data, $id]);
+        $error = $stmt->errorInfo();
+        if ($error[0] != '00000') {
+            Logger::write(date('Y-m-d H:i:s')." Role::update error({$error[0]}): {$error[2]}".PHP_EOL);
+        }
 
-        return true;
+        return $stmt->rowCount();
     }
 
     public function remove($id)

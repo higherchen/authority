@@ -16,12 +16,8 @@ class RelationHandler
     {
         $ret = new CommonRet();
 
-        try {
-            (new \AuthItemChild())->add($parent, $child);
-            $ret->ret = \Constant::RET_OK;
-        } catch (\Exception $e) {
-            $ret->ret = \Constant::RET_DATA_CONFLICT;
-        }
+        $count = (new \AuthItemChild())->add($parent, $child);
+        $ret->ret = $count ? \Constant::RET_OK : \Constant::RET_DATA_CONFLICT;
 
         return $ret;
     }

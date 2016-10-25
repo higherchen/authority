@@ -4,11 +4,11 @@ use Swoole\Core\Logger;
 
 class AuthItem extends Model
 {
-    const GET_ALL_SQL = 'SELECT * FROM auth_item';
-    const GET_BY_TYPE_SQL = 'SELECT * FROM auth_item WHERE type=?';
-    const GET_BY_ID_SQL = 'SELECT * FROM auth_item WHERE id=?';
+    const GET_ALL_SQL = 'SELECT id,name,type,description,rule_id,data FROM auth_item';
+    const GET_BY_TYPE_SQL = 'SELECT id,name,type,description,rule_id,data FROM auth_item WHERE type=?';
+    const GET_BY_ID_SQL = 'SELECT id,name,type,description,rule_id,data FROM auth_item WHERE id=?';
     const GET_ID_BY_RULE_SQL = 'SELECT id FROM auth_item WHERE rule_id=?';
-    const GET_BY_NAME_SQL = 'SELECT * FROM auth_item WHERE name=?';
+    const GET_BY_NAME_SQL = 'SELECT id,name,type,description,rule_id,data FROM auth_item WHERE name=?';
     const INSERT_SQL = 'INSERT INTO auth_item (name,type,rule_id,description,data) VALUES (?,?,?,?,?)';
     const UPDATE_SQL = 'UPDATE auth_item SET name=?,description=?,data=? WHERE type=? AND id=?';
     const DELETE_BY_ID_SQL = 'DELETE FROM auth_item WHERE type=? AND id=?';

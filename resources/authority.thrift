@@ -127,6 +127,7 @@ struct ResourceAttr                             // 资源权限属性
     4:i32                  owner_id
     5:i32                  role_id
     6:string               mode
+    7:string               data
 }
 
 struct Role                                     // 角色
@@ -134,6 +135,9 @@ struct Role                                     // 角色
     1:i32                  id
     2:i32                  type
     3:string               name
+    4:string               description
+    5:i32                  rule_id
+    6:string               data
 }
 
 struct RoleMember                               // 角色成员
@@ -162,6 +166,8 @@ service AuthorityService
     // 功能权限
 
     CommonRet addRule(1:Rule rule)                                      // 新增规则
+    Rule getRuleByName(1:string name)                                   // 根据名称获取规则
+    CommonRet updateRule(1:i32 rule_id, 2:Rule rule)                    // 编辑规则
     CommonRet rmRule(1:i32 rule_id)                                     // 删除规则
 
     CommonRet addUser(1:User user)                                      // 新增用户

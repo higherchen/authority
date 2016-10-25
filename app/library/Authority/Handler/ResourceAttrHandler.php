@@ -15,14 +15,12 @@ class ResourceAttrHandler
     {
         $ret = new CommonRet();
 
-        $name = $resource_attr->name;
-        $src_id = $resource_attr->src_id;
-        $owner_id = $resource_attr->owner_id ? : 0;
-        $role_id = $resource_attr->role_id ? : 0;
+        $owner_id = $resource_attr->owner_id ?: 0;
+        $role_id = $resource_attr->role_id ?: 0;
         $mode = $resource_attr->mode;
-        $rule = $resource_attr->rule ? : '';
+        $data = $resource_attr->data ?: '';
 
-        $id = (new \ResourceAttr())->add($name, $src_id, $owner_id, $role_id, $mode, $rule);
+        $id = (new \ResourceAttr())->add($resource_attr->name, $resource_attr->src_id, $owner_id, $role_id, $mode, $data);
         if ($id) {
             $ret->ret = \Constant::RET_OK;
         } else {
@@ -67,12 +65,12 @@ class ResourceAttrHandler
         $model = new \ResourceAttr();
         $item = $model->getById($name, $src_id);
         if ($item) {
-            $owner_id = $resource_attr->owner_id ? : $item['owner_id'];
-            $role_id = $resource_attr->role_id ? : $item['role_id'];
-            $mode = $resource_attr->mode ? : $item['mode'];
-            $rule = $resource_attr->rule ? : $item['rule'];
+            $owner_id = $resource_attr->owner_id ?: $item['owner_id'];
+            $role_id = $resource_attr->role_id ?: $item['role_id'];
+            $mode = $resource_attr->mode ?: $item['mode'];
+            $data = $resource_attr->data ?: $item['data'];
             
-            $model->update($name, $src_id, $owner_id, $role_id, $mode, $rule);
+            $model->update($name, $src_id, $owner_id, $role_id, $mode, $data);
             $ret->ret = \Constant::RET_OK;
         } else {
             $ret->ret = \Constant::RET_DATA_NO_FOUND;
@@ -126,7 +124,7 @@ class ResourceAttrHandler
                         'owner_id' => $item['owner_id'],
                         'role_id' => $item['role_id'],
                         'mode' => $item['mode'],
-                        'rule' => $item['rule'],
+                        'data' => $item['data'],
                     ]
                 );
             }

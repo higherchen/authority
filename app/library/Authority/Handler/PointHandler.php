@@ -16,7 +16,7 @@ class PointHandler
     {
         $ret = new CommonRet();
 
-        $id = (new \AuthItem())->add($point->name, \Constant::POINT, $point->rule_id ? : 0, $point->description, $point->data);
+        $id = (new \AuthItem())->add($point->name, \Constant::POINT, $point->rule_id ?: 0, $point->description ?: '', $point->data ?: '');
         if ($id) {
             $ret->ret = \Constant::RET_OK;
             $ret->data = json_encode(['id' => $id]);
@@ -49,12 +49,8 @@ class PointHandler
             $name = $point->name ?: $item['name'];
             $data = $point->data ?: $item['data'];
             $description = $point->description ?: $item['description'];
-            try {
-                $model->update($point_id, \Constant::POINT, $name, $description, $data);
-                $ret->ret = \Constant::RET_OK;
-            } catch (\Exception $e) {
-                $ret->ret = \Constant::RET_DATA_CONFLICT;
-            }
+            $count = $model->update($point_id, \Constant::POINT, $name, $description, $data);
+            $ret->ret = $count ? \Constant::RET_OK : \Constant::RET_DATA_CONFLICT;
         } else {
             $ret->ret = \Constant::RET_DATA_NO_FOUND;
         }

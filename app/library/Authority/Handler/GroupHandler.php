@@ -16,16 +16,15 @@ class GroupHandler
     {
         $ret = new CommonRet();
 
-        $model = new \AuthItem();
-        try {
-            $id = $model->add($group->name, $group->type, $group->rule_id ? : 0, $group->description, '');
+        $id = (new \AuthItem())->add($group->name, $group->type, $group->rule_id ?: 0, $group->description ?: '');
+        if ($id) {
             $ret->ret = \Constant::RET_OK;
             $ret->data = json_encode(['id' => $id]);
 
             if ($parent && $group->type == \Constant::GROUP) {
                 (new \AuthItemChild())->add($parent, $id);
             }
-        } catch (\Exception $e) {
+        } else {
             $ret->ret = \Constant::RET_DATA_CONFLICT;
         }
 
@@ -76,12 +75,8 @@ class GroupHandler
         if (in_array($item['type'], [\Constant::GROUP, \Constant::ORG])) {
             $name = $group->name ?: $item['name'];
             $description = $group->description ?: $item['description'];
-            try {
-                $model->update($group_id, $item['type'], $name, $description);
-                $ret->ret = \Constant::RET_OK;
-            } catch (\Exception $e) {
-                $ret->ret = \Constant::RET_DATA_CONFLICT;
-            }
+            $count = $model->update($group_id, $item['type'], $name, $description);
+            $ret->ret = $count ? \Constant::RET_OK : \Constant::RET_DATA_CONFLICT;
         } else {
             $ret->ret = \Constant::RET_DATA_NO_FOUND;
         }
@@ -259,7 +254,6 @@ class GroupHandler
                 $group_ids[] = $child;
             }
         }
-        // var_dump($group_ids, $origin_points);
 
         // 构建要删除的权限点
         if ($origin_points) {

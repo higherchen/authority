@@ -23,6 +23,53 @@ class RuleHandler
     }
 
     /**
+     * 根据名称获取规则.
+     *
+     * @param string $name
+     *
+     * @return \Authority\Rule $rule
+     */
+    public function getByName($name)
+    {
+        $rule = new Rule();
+
+        $item = (new \AuthRule)->getByName($name);
+        if ($item) {
+            $rule->id = $item['id'];
+            $rule->name = $item['name'];
+            $rule->data = $item['data'];
+        }
+
+        return $rule;
+    }
+
+    /**
+     * 编辑规则.
+     *
+     * @param int             $rule_id
+     * @param \Authority\Rule $rule
+     *
+     * @return \Authority\CommonRet $ret
+     */
+    public static function update($rule_id, Rule $rule)
+    {
+        $ret = new CommonRet();
+
+        $model = new \AuthRule();
+        $item = $model->getById($rule_id);
+        if ($item) {
+            $name = $rule->name ?: $item['name'];
+            $data = $rule->data ?: $item['data'];
+            $count = $model->update($rule_id, $name, $data);
+            $ret->ret = $count ? \Constant::RET_OK : \Constant::RET_DATA_CONFLICT;
+        } else {
+            $ret->ret = \Constant::RET_DATA_NO_FOUND;
+        }
+
+        return $ret;
+    }
+
+    /**
      * 删除规则.
      *
      * @param int $rule_id

@@ -2404,6 +2404,10 @@ class ResourceAttr {
    * @var string
    */
   public $mode = null;
+  /**
+   * @var string
+   */
+  public $data = null;
 
   public function __construct($vals=null) {
     if (!isset(self::$_TSPEC)) {
@@ -2432,6 +2436,10 @@ class ResourceAttr {
           'var' => 'mode',
           'type' => TType::STRING,
           ),
+        7 => array(
+          'var' => 'data',
+          'type' => TType::STRING,
+          ),
         );
     }
     if (is_array($vals)) {
@@ -2452,6 +2460,9 @@ class ResourceAttr {
       }
       if (isset($vals['mode'])) {
         $this->mode = $vals['mode'];
+      }
+      if (isset($vals['data'])) {
+        $this->data = $vals['data'];
       }
     }
   }
@@ -2517,6 +2528,13 @@ class ResourceAttr {
             $xfer += $input->skip($ftype);
           }
           break;
+        case 7:
+          if ($ftype == TType::STRING) {
+            $xfer += $input->readString($this->data);
+          } else {
+            $xfer += $input->skip($ftype);
+          }
+          break;
         default:
           $xfer += $input->skip($ftype);
           break;
@@ -2560,6 +2578,11 @@ class ResourceAttr {
       $xfer += $output->writeString($this->mode);
       $xfer += $output->writeFieldEnd();
     }
+    if ($this->data !== null) {
+      $xfer += $output->writeFieldBegin('data', TType::STRING, 7);
+      $xfer += $output->writeString($this->data);
+      $xfer += $output->writeFieldEnd();
+    }
     $xfer += $output->writeFieldStop();
     $xfer += $output->writeStructEnd();
     return $xfer;
@@ -2582,6 +2605,18 @@ class Role {
    * @var string
    */
   public $name = null;
+  /**
+   * @var string
+   */
+  public $description = null;
+  /**
+   * @var int
+   */
+  public $rule_id = null;
+  /**
+   * @var string
+   */
+  public $data = null;
 
   public function __construct($vals=null) {
     if (!isset(self::$_TSPEC)) {
@@ -2598,6 +2633,18 @@ class Role {
           'var' => 'name',
           'type' => TType::STRING,
           ),
+        4 => array(
+          'var' => 'description',
+          'type' => TType::STRING,
+          ),
+        5 => array(
+          'var' => 'rule_id',
+          'type' => TType::I32,
+          ),
+        6 => array(
+          'var' => 'data',
+          'type' => TType::STRING,
+          ),
         );
     }
     if (is_array($vals)) {
@@ -2609,6 +2656,15 @@ class Role {
       }
       if (isset($vals['name'])) {
         $this->name = $vals['name'];
+      }
+      if (isset($vals['description'])) {
+        $this->description = $vals['description'];
+      }
+      if (isset($vals['rule_id'])) {
+        $this->rule_id = $vals['rule_id'];
+      }
+      if (isset($vals['data'])) {
+        $this->data = $vals['data'];
       }
     }
   }
@@ -2653,6 +2709,27 @@ class Role {
             $xfer += $input->skip($ftype);
           }
           break;
+        case 4:
+          if ($ftype == TType::STRING) {
+            $xfer += $input->readString($this->description);
+          } else {
+            $xfer += $input->skip($ftype);
+          }
+          break;
+        case 5:
+          if ($ftype == TType::I32) {
+            $xfer += $input->readI32($this->rule_id);
+          } else {
+            $xfer += $input->skip($ftype);
+          }
+          break;
+        case 6:
+          if ($ftype == TType::STRING) {
+            $xfer += $input->readString($this->data);
+          } else {
+            $xfer += $input->skip($ftype);
+          }
+          break;
         default:
           $xfer += $input->skip($ftype);
           break;
@@ -2679,6 +2756,21 @@ class Role {
     if ($this->name !== null) {
       $xfer += $output->writeFieldBegin('name', TType::STRING, 3);
       $xfer += $output->writeString($this->name);
+      $xfer += $output->writeFieldEnd();
+    }
+    if ($this->description !== null) {
+      $xfer += $output->writeFieldBegin('description', TType::STRING, 4);
+      $xfer += $output->writeString($this->description);
+      $xfer += $output->writeFieldEnd();
+    }
+    if ($this->rule_id !== null) {
+      $xfer += $output->writeFieldBegin('rule_id', TType::I32, 5);
+      $xfer += $output->writeI32($this->rule_id);
+      $xfer += $output->writeFieldEnd();
+    }
+    if ($this->data !== null) {
+      $xfer += $output->writeFieldBegin('data', TType::STRING, 6);
+      $xfer += $output->writeString($this->data);
       $xfer += $output->writeFieldEnd();
     }
     $xfer += $output->writeFieldStop();

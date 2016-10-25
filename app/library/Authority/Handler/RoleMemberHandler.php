@@ -16,12 +16,8 @@ class RoleMemberHandler
     {
         $ret = new CommonRet();
 
-        try {
-            (new \RoleMember())->add($role_id, $user_id);
-            $ret->ret = \Constant::RET_OK;
-        } catch (\Exception $e) {
-            $ret->ret = \Constant::RET_DATA_CONFLICT;
-        }
+        $count = (new \RoleMember())->add($role_id, $user_id);
+        $ret->ret = $count ? \Constant::RET_OK : \Constant::RET_DATA_CONFLICT;
 
         return $ret;
     }

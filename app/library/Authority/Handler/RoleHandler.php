@@ -15,11 +15,11 @@ class RoleHandler
     {
         $ret = new CommonRet();
 
-        try {
-            $id = (new \Role())->add($role->type, $role->name, $role->rule ?: '');
+        $id = (new \Role())->add($role->type, $role->name, $role->description ?: '', $role->rule_id ?: 0, $role->data ?: '');
+        if ($id) {
             $ret->ret = \Constant::RET_OK;
             $ret->data = json_encode(['id' => $id]);
-        } catch (\Exception $e) {
+        } else {
             $ret->ret = \Constant::RET_DATA_CONFLICT;
             $ret->data = 'Role exists!';
         }
@@ -64,9 +64,7 @@ class RoleHandler
         $model = new \Role();
         $item = $model->getById($role_id);
         if ($item) {
-            $name = $role->name ?: $item['name'];
-            $rule = $role->rule ?: $item['rule'];
-            $model->update($role_id, $name, $rule);
+            $model->update($role_id, $role->name ?: $item['name'], $role->description ?: $item['description'], $role->data ?: $item['data']);
             $ret->ret = \Constant::RET_OK;
         } else {
             $ret->ret = \Constant::RET_DATA_NO_FOUND;
@@ -96,7 +94,7 @@ class RoleHandler
             $ret->total = count($roles);
         } else {
             // 有搜索条件 @_@
-            $sql = 'SELECT * FROM role';
+            $sql = 'SELECT id,type,name,description,rule_id,data FROM role';
             $total_sql = 'SELECT COUNT(1) FROM role';
             if ($search->conditions) {
                 $where = [];
@@ -126,7 +124,9 @@ class RoleHandler
                         'id' => $role['id'],
                         'type' => $role['type'],
                         'name' => $role['name'],
-                        'rule' => $role['rule'],
+                        'description' => $role['description'],
+                        'rule_id' => $role['rule_id'],
+                        'data' => $role['data'],
                     ]
                 );
             }
