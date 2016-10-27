@@ -65,7 +65,6 @@ CREATE TABLE `resource_attr` (
 
 CREATE TABLE `role` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增ID',
-  `type` tinyint(4) NOT NULL COMMENT '区分模块',
   `name` varchar(16) NOT NULL COMMENT '角色名',
   `description` varchar(32) NOT NULL DEFAULT '' COMMENT '描述',
   `rule_id` int(11) NOT NULL DEFAULT 0 COMMENT '如果存在规则，关联到规则表',

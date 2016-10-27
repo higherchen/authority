@@ -133,11 +133,10 @@ struct ResourceAttr                             // 资源权限属性
 struct Role                                     // 角色
 {
     1:i32                  id
-    2:i32                  type
-    3:string               name
-    4:string               description
-    5:i32                  rule_id
-    6:string               data
+    2:string               name
+    3:string               description
+    4:i32                  rule_id
+    5:string               data
 }
 
 struct RoleMember                               // 角色成员

@@ -2598,10 +2598,6 @@ class Role {
    */
   public $id = null;
   /**
-   * @var int
-   */
-  public $type = null;
-  /**
    * @var string
    */
   public $name = null;
@@ -2626,22 +2622,18 @@ class Role {
           'type' => TType::I32,
           ),
         2 => array(
-          'var' => 'type',
-          'type' => TType::I32,
-          ),
-        3 => array(
           'var' => 'name',
           'type' => TType::STRING,
           ),
-        4 => array(
+        3 => array(
           'var' => 'description',
           'type' => TType::STRING,
           ),
-        5 => array(
+        4 => array(
           'var' => 'rule_id',
           'type' => TType::I32,
           ),
-        6 => array(
+        5 => array(
           'var' => 'data',
           'type' => TType::STRING,
           ),
@@ -2650,9 +2642,6 @@ class Role {
     if (is_array($vals)) {
       if (isset($vals['id'])) {
         $this->id = $vals['id'];
-      }
-      if (isset($vals['type'])) {
-        $this->type = $vals['type'];
       }
       if (isset($vals['name'])) {
         $this->name = $vals['name'];
@@ -2696,34 +2685,27 @@ class Role {
           }
           break;
         case 2:
-          if ($ftype == TType::I32) {
-            $xfer += $input->readI32($this->type);
-          } else {
-            $xfer += $input->skip($ftype);
-          }
-          break;
-        case 3:
           if ($ftype == TType::STRING) {
             $xfer += $input->readString($this->name);
           } else {
             $xfer += $input->skip($ftype);
           }
           break;
-        case 4:
+        case 3:
           if ($ftype == TType::STRING) {
             $xfer += $input->readString($this->description);
           } else {
             $xfer += $input->skip($ftype);
           }
           break;
-        case 5:
+        case 4:
           if ($ftype == TType::I32) {
             $xfer += $input->readI32($this->rule_id);
           } else {
             $xfer += $input->skip($ftype);
           }
           break;
-        case 6:
+        case 5:
           if ($ftype == TType::STRING) {
             $xfer += $input->readString($this->data);
           } else {
@@ -2748,28 +2730,23 @@ class Role {
       $xfer += $output->writeI32($this->id);
       $xfer += $output->writeFieldEnd();
     }
-    if ($this->type !== null) {
-      $xfer += $output->writeFieldBegin('type', TType::I32, 2);
-      $xfer += $output->writeI32($this->type);
-      $xfer += $output->writeFieldEnd();
-    }
     if ($this->name !== null) {
-      $xfer += $output->writeFieldBegin('name', TType::STRING, 3);
+      $xfer += $output->writeFieldBegin('name', TType::STRING, 2);
       $xfer += $output->writeString($this->name);
       $xfer += $output->writeFieldEnd();
     }
     if ($this->description !== null) {
-      $xfer += $output->writeFieldBegin('description', TType::STRING, 4);
+      $xfer += $output->writeFieldBegin('description', TType::STRING, 3);
       $xfer += $output->writeString($this->description);
       $xfer += $output->writeFieldEnd();
     }
     if ($this->rule_id !== null) {
-      $xfer += $output->writeFieldBegin('rule_id', TType::I32, 5);
+      $xfer += $output->writeFieldBegin('rule_id', TType::I32, 4);
       $xfer += $output->writeI32($this->rule_id);
       $xfer += $output->writeFieldEnd();
     }
     if ($this->data !== null) {
-      $xfer += $output->writeFieldBegin('data', TType::STRING, 6);
+      $xfer += $output->writeFieldBegin('data', TType::STRING, 5);
       $xfer += $output->writeString($this->data);
       $xfer += $output->writeFieldEnd();
     }
