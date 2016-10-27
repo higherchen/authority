@@ -1,5 +1,7 @@
 <?php
 
+use Swoole\Core\Logger;
+
 class AuthRule extends Model
 {
     const GET_BY_ID_SQL = 'SELECT id,name,data FROM auth_rule WHERE id=?';

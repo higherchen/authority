@@ -1,5 +1,7 @@
 <?php
 
+use Swoole\Core\Logger;
+
 class ResourceAttr extends Model
 {
     const GET_BY_ID_SQL = 'SELECT id,name,src_id,owner_id,role_id,mode,data FROM resource_attr WHERE name=? AND src_id=?';

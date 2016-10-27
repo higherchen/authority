@@ -1,5 +1,7 @@
 <?php
 
+use Swoole\Core\Logger;
+
 class User extends Model
 {
     const INSERT_SQL = 'INSERT INTO user (username,nickname,email,telephone) VALUES (?,?,?,?)';

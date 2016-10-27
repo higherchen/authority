@@ -1,5 +1,7 @@
 <?php
 
+use Swoole\Core\Logger;
+
 class RoleMember extends Model
 {
     const INSERT_SQL = 'INSERT INTO role_member (role_id,user_id) VALUES (?,?)';

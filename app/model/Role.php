@@ -1,5 +1,7 @@
 <?php
 
+use Swoole\Core\Logger;
+
 class Role extends Model
 {
     const GET_ALL_SQL = 'SELECT id,name,description,rule_id,data FROM role ORDER BY id DESC';
