@@ -8,7 +8,6 @@ class AuthItem extends Model
     const GET_BY_TYPE_SQL = 'SELECT id,name,type,description,rule_id,data FROM auth_item WHERE type=?';
     const GET_BY_ID_SQL = 'SELECT id,name,type,description,rule_id,data FROM auth_item WHERE id=?';
     const GET_ID_BY_RULE_SQL = 'SELECT id FROM auth_item WHERE rule_id=?';
-    const GET_BY_NAME_SQL = 'SELECT id,name,type,description,rule_id,data FROM auth_item WHERE name=?';
     const INSERT_SQL = 'INSERT INTO auth_item (name,type,rule_id,description,data) VALUES (?,?,?,?,?)';
     const UPDATE_SQL = 'UPDATE auth_item SET name=?,description=?,data=? WHERE type=? AND id=?';
     const DELETE_BY_ID_SQL = 'DELETE FROM auth_item WHERE type=? AND id=?';
@@ -44,14 +43,6 @@ class AuthItem extends Model
         $stmt->execute([$rule_id]);
 
         return $stmt->fetchAll(PDO::FETCH_COLUMN);
-    }
-
-    public function getByName($name)
-    {
-        $stmt = $this->getStatement(self::GET_BY_NAME_SQL);
-        $stmt->execute([$name]);
-
-        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     public function add($name, $type, $rule_id = 0, $description = '', $data = '')
